@@ -1,0 +1,31 @@
+Metadata-Version: 2.4
+Name: ai-model-testbed
+Version: 0.1.0
+Summary: A minimal, clean structure to test different AI models behind one interface
+Author: AI Testbed Team
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+
+# AI Model Testbed (bootstrap)
+
+A minimal, clean structure to test different AI models behind one interface.
+
+## Quick start
+
+```bash
+uv venv && uv pip install -e ".[dev]"
+# or: python -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
+pytest -q
+```
+
+## Layout
+- `config/models.yaml` — model registry (name, endpoint, key)
+- `src/ai_testbed/config/loader.py` — typed config loader
+- `src/ai_testbed/connectors/` — model connectors (start with `mock`)
+- `src/ai_testbed/harness/test_harness.py` — tiny test harness
+- `tests/` — unit tests and sample cases

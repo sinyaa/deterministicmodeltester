@@ -1,0 +1,7 @@
+# Registry of models. Keys should be stable names you use in tests & harness.
+models:
+  mock-gpt:
+    provider: mock
+    endpoint: mock://local
+    api_key: ${MOCK_API_KEY:-dummy}
+    timeout_s: 10

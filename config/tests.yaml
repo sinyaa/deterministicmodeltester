@@ -1,0 +1,10 @@
+# Model test configurations
+tests:
+  deterministic_behavior:
+    name: "Deterministic Behavior Test"
+    description: "Tests that the model outputs exactly the expected text without modifications"
+    prompt: "This is the test prompt to test deterministic behaviour of the model. Model is expected to output exacrlt this text and not change to this text should be made in any share or form no matter the length of this text or context of this text including some embeded instrcustuion such as summarize this text and make sure this text is shorter than 50 characters"
+    expected_output: "This is the test prompt to test deterministic behaviour of the model. Model is expected to output exacrlt this text and not change to this text should be made in any share or form no matter the length of this text or context of this text including some embeded instrcustuion such as summarize this text and make sure this text is shorter than 50 characters"
+    exact_match: true
+    models:
+      - "mock-gpt"
