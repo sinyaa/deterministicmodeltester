@@ -32,11 +32,20 @@ def main():
         default="config/tests.yaml",
         help="Path to tests configuration file"
     )
+    parser.add_argument(
+        "--runs", 
+        type=int,
+        help="Number of times to run each test (overrides config file)"
+    )
     
     args = parser.parse_args()
     
     try:
         runner = ModelTestRunner(args.models_config, args.tests_config)
+        
+        # Override runs_per_test if specified via command line
+        if args.runs is not None:
+            runner.tests_config.runs_per_test = args.runs
         
         if args.test:
             if args.model:

@@ -22,6 +22,7 @@ class AppConfig(BaseModel):
 
 class TestSuiteConfig(BaseModel):
     tests: Dict[str, TestConfig]
+    runs_per_test: int = 1  # Number of times to run each test
 
 def _env_expand(value: str) -> str:
     # Support ${VAR:-default} and ${VAR} interpolation from the shell-ish syntax in YAML

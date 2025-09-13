@@ -1,4 +1,6 @@
 # Model test configurations
+runs_per_test: 3  # Number of times to run each test
+
 tests:
   deterministic_behavior:
     name: "Deterministic Behavior Test"
