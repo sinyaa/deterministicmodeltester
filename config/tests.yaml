@@ -10,3 +10,12 @@ tests:
     exact_match: true
     models:
       - "mock-gpt"
+  
+  substring_test:
+    name: "Substring Match Test"
+    description: "Tests that the model output contains the expected substring"
+    prompt: "Say hello to the world"
+    expected_output: "hello"
+    exact_match: false
+    models:
+      - "mock-gpt"

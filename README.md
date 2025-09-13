@@ -11,6 +11,7 @@ It provides a clean project structure, configuration-driven model definitions, p
 - **YAML-defined test cases**: Add test cases in `config/tests.yaml` (prompt, expected output)
 - **Multiple test runs**: Configure and run each test N times for reliability testing
 - **Color-coded output**: Visual pass/fail indicators with pass rate calculations
+- **Lexicographical distance**: For exact match tests, shows character distance between expected and actual output
 - **CI-ready**: GitHub Actions workflow included to run pytest on every push/PR
 
 ## Quick Start
@@ -94,6 +95,9 @@ Test: deterministic_behavior
   Model: mock-gpt
     ✅ PASS (Run 1)
     ❌ FAIL (Run 2)
+      Expected: Hello World
+      Actual:   Hello Word
+      Distance: 1 characters
     ✅ PASS (Run 3)
     Pass Rate: 66.7% (2/3)
 

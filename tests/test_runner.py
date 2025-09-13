@@ -265,6 +265,225 @@ def test_test_result_creation_with_run_number():
     assert result.passed is True
 
 
+def test_levenshtein_distance_calculation():
+    """Test the Levenshtein distance calculation function."""
+    from ai_testbed.test_runner import levenshtein_distance
+    
+    # Test identical strings
+    assert levenshtein_distance("hello", "hello") == 0
+    
+    # Test single character difference
+    assert levenshtein_distance("hello", "hallo") == 1
+    
+    # Test insertion
+    assert levenshtein_distance("hello", "hellos") == 1
+    
+    # Test deletion
+    assert levenshtein_distance("hello", "hell") == 1
+    
+    # Test substitution
+    assert levenshtein_distance("hello", "hallo") == 1
+    
+    # Test multiple differences
+    assert levenshtein_distance("kitten", "sitting") == 3
+    
+    # Test empty strings
+    assert levenshtein_distance("", "") == 0
+    assert levenshtein_distance("hello", "") == 5
+    assert levenshtein_distance("", "hello") == 5
+
+
+@patch('ai_testbed.test_runner.load_app_config')
+@patch('ai_testbed.test_runner.load_test_config')
+def test_exact_match_test_calculates_distance(mock_load_test, mock_load_app):
+    """Test that exact match tests calculate lexicographical distance."""
+    mock_models_config = AppConfig(
+        models={
+            "mock-gpt": ModelConfig(
+                provider="mock",
+                endpoint="http://mock.com",
+                api_key="test-key"
+            )
+        }
+    )
+    
+    mock_tests_config = TestSuiteConfig(
+        tests={
+            "test1": TestConfig(
+                name="Test 1",
+                description="Test description",
+                prompt="Test prompt",
+                expected_output="Hello World",
+                exact_match=True,  # This should trigger distance calculation
+                models=["mock-gpt"]
+            )
+        },
+        runs_per_test=1
+    )
+    
+    mock_load_app.return_value = mock_models_config
+    mock_load_test.return_value = mock_tests_config
+    
+    runner = ModelTestRunner()
+    
+    # Mock the connector to return a different output
+    with patch('ai_testbed.test_runner.create_connector') as mock_create:
+        mock_connector = Mock()
+        mock_connector.generate.return_value = Mock(text="Hello Word")  # 1 character difference
+        mock_create.return_value = mock_connector
+        
+        result = runner.run_single_test("test1", "mock-gpt", run_number=1)
+        
+        assert result.passed is False
+        assert result.distance == 1  # "Hello World" vs "Hello Word" = 1 character difference
+        assert result.expected == "Hello World"
+        assert result.actual == "Hello Word"
+
+
+@patch('ai_testbed.test_runner.load_app_config')
+@patch('ai_testbed.test_runner.load_test_config')
+def test_exact_match_test_passing_case(mock_load_test, mock_load_app):
+    """Test that exact match tests work correctly when they pass."""
+    mock_models_config = AppConfig(
+        models={
+            "mock-gpt": ModelConfig(
+                provider="mock",
+                endpoint="http://mock.com",
+                api_key="test-key"
+            )
+        }
+    )
+    
+    mock_tests_config = TestSuiteConfig(
+        tests={
+            "test1": TestConfig(
+                name="Test 1",
+                description="Test description",
+                prompt="Test prompt",
+                expected_output="Hello World",
+                exact_match=True,  # This should trigger distance calculation
+                models=["mock-gpt"]
+            )
+        },
+        runs_per_test=1
+    )
+    
+    mock_load_app.return_value = mock_models_config
+    mock_load_test.return_value = mock_tests_config
+    
+    runner = ModelTestRunner()
+    
+    # Mock the connector to return the exact expected output
+    with patch('ai_testbed.test_runner.create_connector') as mock_create:
+        mock_connector = Mock()
+        mock_connector.generate.return_value = Mock(text="Hello World")  # Exact match
+        mock_create.return_value = mock_connector
+        
+        result = runner.run_single_test("test1", "mock-gpt", run_number=1)
+        
+        assert result.passed is True
+        assert result.distance == 0  # "Hello World" vs "Hello World" = 0 character difference
+        assert result.expected == "Hello World"
+        assert result.actual == "Hello World"
+        assert result.error is None
+
+
+@patch('ai_testbed.test_runner.load_app_config')
+@patch('ai_testbed.test_runner.load_test_config')
+def test_substring_match_test_no_distance(mock_load_test, mock_load_app):
+    """Test that substring match tests don't calculate distance."""
+    mock_models_config = AppConfig(
+        models={
+            "mock-gpt": ModelConfig(
+                provider="mock",
+                endpoint="http://mock.com",
+                api_key="test-key"
+            )
+        }
+    )
+    
+    mock_tests_config = TestSuiteConfig(
+        tests={
+            "test1": TestConfig(
+                name="Test 1",
+                description="Test description",
+                prompt="Test prompt",
+                expected_output="Hello",
+                exact_match=False,  # This should NOT trigger distance calculation
+                models=["mock-gpt"]
+            )
+        },
+        runs_per_test=1
+    )
+    
+    mock_load_app.return_value = mock_models_config
+    mock_load_test.return_value = mock_tests_config
+    
+    runner = ModelTestRunner()
+    
+    # Mock the connector to return a different output
+    with patch('ai_testbed.test_runner.create_connector') as mock_create:
+        mock_connector = Mock()
+        mock_connector.generate.return_value = Mock(text="Hello World")  # Contains "Hello"
+        mock_create.return_value = mock_connector
+        
+        result = runner.run_single_test("test1", "mock-gpt", run_number=1)
+        
+        assert result.passed is True
+        assert result.distance is None  # No distance calculation for substring matches
+        assert result.expected == "Hello"
+        assert result.actual == "Hello World"
+
+
+@patch('ai_testbed.test_runner.load_app_config')
+@patch('ai_testbed.test_runner.load_test_config')
+def test_print_results_shows_distance(mock_load_test, mock_load_app, capsys):
+    """Test that print_results displays distance for exact match tests."""
+    mock_models_config = AppConfig(
+        models={
+            "mock-gpt": ModelConfig(
+                provider="mock",
+                endpoint="http://mock.com",
+                api_key="test-key"
+            )
+        }
+    )
+    
+    mock_tests_config = TestSuiteConfig(
+        tests={
+            "test1": TestConfig(
+                name="Test 1",
+                description="Test description",
+                prompt="Test prompt",
+                expected_output="Hello World",
+                exact_match=True,
+                models=["mock-gpt"]
+            )
+        },
+        runs_per_test=1
+    )
+    
+    mock_load_app.return_value = mock_models_config
+    mock_load_test.return_value = mock_tests_config
+    
+    runner = ModelTestRunner()
+    
+    # Create mock results with distance
+    results = {
+        "test1": [
+            TestResult("test1", "mock-gpt", False, "Hello World", "Hello Word", 1, None, 1),
+        ]
+    }
+    
+    runner.print_results(results)
+    captured = capsys.readouterr()
+    
+    # Check that distance is shown
+    assert "Distance: 1 characters" in captured.out
+    assert "Expected: Hello World" in captured.out
+    assert "Actual:   Hello Word" in captured.out
+
+
 @patch('ai_testbed.test_runner.load_app_config')
 @patch('ai_testbed.test_runner.load_test_config')
 def test_print_results_with_multiple_runs(mock_load_test, mock_load_app, capsys):

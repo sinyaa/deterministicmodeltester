@@ -9,6 +9,26 @@ from .connectors.registry import create_connector
 # Initialize colorama for cross-platform color support
 colorama.init()
 
+def levenshtein_distance(s1: str, s2: str) -> int:
+    """Calculate the Levenshtein distance between two strings."""
+    if len(s1) < len(s2):
+        return levenshtein_distance(s2, s1)
+    
+    if len(s2) == 0:
+        return len(s1)
+    
+    previous_row = list(range(len(s2) + 1))
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+    
+    return previous_row[-1]
+
 @dataclass
 class TestResult:
     test_name: str
@@ -18,6 +38,7 @@ class TestResult:
     actual: str
     run_number: int = 1
     error: Optional[str] = None
+    distance: Optional[int] = None  # Lexicographical distance for exact match tests
 
 class ModelTestRunner:
     """Runs model tests defined in YAML configuration files."""
@@ -37,7 +58,8 @@ class ModelTestRunner:
                 expected="",
                 actual="",
                 run_number=run_number,
-                error=f"Test '{test_name}' not found in configuration"
+                error=f"Test '{test_name}' not found in configuration",
+                distance=None
             )
         
         test_config = self.tests_config.tests[test_name]
@@ -50,7 +72,8 @@ class ModelTestRunner:
                 expected=test_config.expected_output,
                 actual="",
                 run_number=run_number,
-                error=f"Model '{model_name}' not configured for test '{test_name}'"
+                error=f"Model '{model_name}' not configured for test '{test_name}'",
+                distance=None
             )
         
         try:
@@ -63,9 +86,14 @@ class ModelTestRunner:
             
             # Check if test passes
             if test_config.exact_match:
-                passed = actual_output.strip() == test_config.expected_output.strip()
+                expected_stripped = test_config.expected_output.strip()
+                actual_stripped = actual_output.strip()
+                passed = expected_stripped == actual_stripped
+                # Calculate lexicographical distance for exact match tests
+                distance = levenshtein_distance(expected_stripped, actual_stripped)
             else:
                 passed = test_config.expected_output in actual_output
+                distance = None  # No distance calculation for substring matches
             
             return TestResult(
                 test_name=test_name,
@@ -74,7 +102,8 @@ class ModelTestRunner:
                 expected=test_config.expected_output,
                 actual=actual_output,
                 run_number=run_number,
-                error=None
+                error=None,
+                distance=distance
             )
             
         except Exception as e:
@@ -85,7 +114,8 @@ class ModelTestRunner:
                 expected=test_config.expected_output,
                 actual="",
                 run_number=run_number,
-                error=str(e)
+                error=str(e),
+                distance=None
             )
     
     def run_test(self, test_name: str) -> List[TestResult]:
@@ -159,6 +189,10 @@ class ModelTestRunner:
                         else:
                             print(f"      {Fore.RED}Expected: {result.expected[:100]}{'...' if len(result.expected) > 100 else ''}{Style.RESET_ALL}")
                             print(f"      {Fore.RED}Actual:   {result.actual[:100]}{'...' if len(result.actual) > 100 else ''}{Style.RESET_ALL}")
+                            # Show lexicographical distance for exact match tests
+                            if result.distance is not None:
+                                distance_color = Fore.GREEN if result.distance <= 5 else Fore.YELLOW if result.distance <= 20 else Fore.RED
+                                print(f"      {distance_color}Distance: {result.distance} characters{Style.RESET_ALL}")
                 
                 # Show pass rate for this model
                 if len(model_test_results) > 1:
