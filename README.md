@@ -8,6 +8,7 @@ It provides a clean project structure, configuration-driven model definitions, p
   - MockConnector: returns first 10 characters (mock-gpt, mock-claude) or full text (mock-gpt-2)
   - OpenAIConnector: integrates with OpenAI API for real model testing
   - AnthropicConnector: integrates with Anthropic API for Claude models
+  - OpenAIRealtimeWebSocketConnector: integrates with OpenAI Realtime API via WebSocket for real-time models
   - EchoConnector: simple echo connector for local testing
 - **Test harness**: Run model evaluations with TestHarness, supporting substring or exact matches
 - **YAML-defined test cases**: Add test cases in `config/tests.yaml` (prompt, expected output)
@@ -67,8 +68,10 @@ The AI Model Testbed supports a wide range of AI models from multiple providers:
 - `gpt-4.1-mini` - Smaller, faster version of GPT-4.1
 - `gpt-4o` - Multimodal model with vision capabilities
 - `gpt-4o-mini` - Compact version of GPT-4o
-- `gpt-4o-mini-realtime-preview` - Real-time preview of GPT-4o mini (uses standard API for testing)
-- `gpt-4o-realtime-preview` - Real-time preview of GPT-4o (uses standard API for testing)
+
+**Realtime API (`/v1/realtime`):**
+- `gpt-4o-mini-realtime-preview` - Real-time preview of GPT-4o mini with WebSocket support
+- `gpt-4o-realtime-preview` - Real-time preview of GPT-4o with WebSocket support
 
 **O1 Family:**
 - `o1-mini` - Smaller version of the O1 reasoning model
@@ -125,6 +128,19 @@ models:
     api_key: ${ANTHROPIC_API_KEY}
     timeout_s: 30
 
+  # Realtime models (WebSocket)
+  gpt-4o-mini-realtime-preview:
+    provider: openai_realtime_websocket
+    endpoint: wss://api.openai.com/v1/realtime
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  gpt-4o-realtime-preview:
+    provider: openai_realtime_websocket
+    endpoint: wss://api.openai.com/v1/realtime
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
   # Mock models
   mock-gpt:
     provider: mock
@@ -151,7 +167,7 @@ Based on testing results, here are some performance characteristics:
 **⚠️ Considerations:**
 - Some models may have access restrictions based on your API key
 - GPT-5 family models may not be available to all accounts
-- Realtime preview models use standard API endpoints for testing (not WebSocket)
+- Realtime models require WebSocket connections and may have different behavior patterns
 - Model availability can change over time
 
 ## Quick Start
@@ -193,6 +209,9 @@ python run_tests.py --models-config config/models.yaml --tests-config config/tes
 
 # Run with a specific test-run configuration file
 python run_tests.py --run config/test-run.yaml
+
+# Run RT models specifically
+python run_tests.py --run config/rt-run.yaml
 
 # Run all tests against all models with high run counts (bulk testing)
 python run_tests.py --all-models --bulk-runs 100
@@ -293,6 +312,16 @@ models:
     runs: 1
 ```
 
+**RT Models Test (`config/rt-run.yaml`):**
+```yaml
+tests: config/tests-cases-added.yaml
+runs_per_test: 1
+
+models:
+  - name: "gpt-4o-mini-realtime-preview"
+  - name: "gpt-4o-realtime-preview"
+```
+
 **Stress Test (`config/stress-test.yaml`):**
 ```yaml
 runs_per_test: 100
@@ -381,9 +410,73 @@ Model           Score    Pass%    Avg Dist   Tests
 - **Pluggable Connectors**: Easy to add new model providers
 - **Mock Testing**: Built-in mock connectors for testing without API costs
 - **Real Model Support**: Ready-to-use connectors for OpenAI and Anthropic APIs
+- **Realtime WebSocket Support**: Full WebSocket implementation for OpenAI Realtime API
 - **Local Testing**: Echo connector for offline testing and development
+
+### 🌐 **Realtime Models Support**
+- **WebSocket Integration**: Native support for OpenAI Realtime API via WebSocket connections
+- **Audio Response Handling**: Automatic extraction of text transcripts from audio responses
+- **Session Management**: Robust session creation and cleanup for realtime models
+- **Error Handling**: Comprehensive error handling and retry mechanisms for WebSocket connections
+- **Debug Logging**: Detailed logging for troubleshooting WebSocket communication
 
 ### 📈 **Robust Logging**
 - **Progress Tracking**: Real-time updates during test execution
 - **Timing Information**: Execution time for each test run
 - **Error Reporting**: Detailed error information for debugging
+
+## Realtime Models Testing
+
+The framework includes full support for OpenAI's Realtime API models, which use WebSocket connections for real-time communication.
+
+### 🌐 **WebSocket Implementation**
+
+The `OpenAIRealtimeWebSocketConnector` provides:
+
+- **Automatic WebSocket Management**: Handles connection, session creation, and cleanup
+- **Audio Response Processing**: Extracts text transcripts from audio responses
+- **Session State Management**: Robust session lifecycle management
+- **Error Recovery**: Comprehensive error handling and retry mechanisms
+- **Debug Logging**: Detailed logging for troubleshooting WebSocket issues
+
+### 🔧 **RT Models Configuration**
+
+RT models are configured with the `openai_realtime_websocket` provider:
+
+```yaml
+# config/models.yaml
+models:
+  gpt-4o-mini-realtime-preview:
+    provider: openai_realtime_websocket
+    endpoint: wss://api.openai.com/v1/realtime
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+```
+
+### 🧪 **Testing RT Models**
+
+RT models can be tested using the dedicated configuration:
+
+```bash
+# Run RT models with their specific test cases
+python run_tests.py --run config/rt-run.yaml
+
+# Run specific RT model
+python run_tests.py --run config/rt-run.yaml --model gpt-4o-mini-realtime-preview
+```
+
+### 📊 **RT Models Features**
+
+- **Real-time Communication**: Uses WebSocket for low-latency communication
+- **Audio Response Support**: Handles audio responses and extracts text transcripts
+- **Session-based**: Each test run creates a new WebSocket session
+- **Automatic Cleanup**: Sessions are properly closed after each test
+- **Debug Output**: Comprehensive logging shows WebSocket message flow
+
+### ⚠️ **RT Models Considerations**
+
+- **WebSocket Dependencies**: Requires `websocket-client` package
+- **API Key Requirements**: Uses the same `OPENAI_API_KEY` as other OpenAI models
+- **Response Format**: RT models return audio responses that are converted to text
+- **Session Management**: Each test creates a new WebSocket session
+- **Timeout Handling**: WebSocket connections have their own timeout mechanisms
