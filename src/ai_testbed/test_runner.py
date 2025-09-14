@@ -297,13 +297,10 @@ class ModelTestRunner:
             # Color coding for score
             if score >= 80:
                 score_color = Fore.GREEN
-                rank_symbol = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else "  "
             elif score >= 50:
                 score_color = Fore.YELLOW
-                rank_symbol = "  "
             else:
                 score_color = Fore.RED
-                rank_symbol = "  "
             
             # Distance color coding
             if avg_distance <= 5:
@@ -313,7 +310,7 @@ class ModelTestRunner:
             else:
                 distance_color = Fore.RED
             
-            print(f"{rank_symbol} {Fore.BLUE}{model_name:<13}{Style.RESET_ALL} {score_color}{score:>6.1f}{Style.RESET_ALL} {overall_pass_rate:>6.1f}% {distance_color}{avg_distance:>8.1f}{Style.RESET_ALL} {stats['passed_tests']:>3}/{stats['total_tests']:<3}")
+            print(f"  {Fore.BLUE}{model_name:<13}{Style.RESET_ALL} {score_color}{score:>6.1f}{Style.RESET_ALL} {overall_pass_rate:>6.1f}% {distance_color}{avg_distance:>8.1f}{Style.RESET_ALL} {stats['passed_tests']:>3}/{stats['total_tests']:<3}")
         
         print("-" * (15 + 8 + 8 + 10 + 8))
     

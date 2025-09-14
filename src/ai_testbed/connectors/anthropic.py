@@ -46,7 +46,12 @@ class AnthropicConnector(BaseConnector):
                 
                 return GenerateResult(text=content, model=self.model_name)
             else:
+                # Include rate limit information in error message
                 error_msg = f"API request failed with status {response.status_code}: {response.text}"
+                if response.status_code == 429:
+                    retry_after = response.headers.get('Retry-After')
+                    if retry_after:
+                        error_msg += f" (retry-after: {retry_after} seconds)"
                 return GenerateResult(text="", model=self.model_name, error=error_msg)
                 
         except requests.exceptions.Timeout:
