@@ -14,11 +14,10 @@ class OpenAIRealtimeConnector(BaseConnector):
         return not result.text or result.text.strip() == ""
 
     def _generate_single(self, prompt: str) -> GenerateResult:
-        """Single generation attempt using the OpenAI Realtime API."""
+        """Single generation attempt using the OpenAI Realtime API (fallback to standard API)."""
         try:
-            # For realtime models, we'll fall back to the standard chat completions API
-            # since the realtime API requires WebSocket connections which are complex
-            # to implement for deterministic testing
+            # Fallback to standard chat completions API for compatibility
+            # For true realtime WebSocket support, use openai-realtime-ws provider
             
             headers = {
                 "Content-Type": "application/json",

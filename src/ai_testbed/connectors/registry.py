@@ -6,6 +6,7 @@ from .openai import OpenAIConnector
 from .echo import EchoConnector
 from .anthropic import AnthropicConnector
 from .openai_realtime import OpenAIRealtimeConnector
+from .openai_realtime_websocket import OpenAIRealtimeWebSocketConnector
 from .half_echo import HalfEchoConnector
 from .reverse_echo import ReverseEchoConnector
 
@@ -16,6 +17,7 @@ PROVIDERS: Dict[str, Type[BaseConnector]] = {
     "echo": EchoConnector,
     "anthropic": AnthropicConnector,
     "openai-realtime": OpenAIRealtimeConnector,
+    "openai-realtime-ws": OpenAIRealtimeWebSocketConnector,
     "half-echo": HalfEchoConnector,
     "reverse-echo": ReverseEchoConnector,
 }
