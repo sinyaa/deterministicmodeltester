@@ -60,6 +60,7 @@ The AI Model Testbed supports a wide range of AI models from multiple providers:
 - `gpt-3.5-turbo` - Fast and cost-effective for most tasks
 - `gpt-3.5-turbo-16k` - Extended context version of GPT-3.5 Turbo
 - `gpt-4` - High-quality reasoning and analysis
+- `gpt-4-turbo` - Enhanced version of GPT-4 with improved performance
 
 **Responses API (`/v1/responses`):**
 - `gpt-4.1` - Latest GPT-4 model with improved capabilities

@@ -33,6 +33,12 @@ models:
     api_key: ${OPENAI_API_KEY}
     timeout_s: 30
 
+  gpt-4-turbo:
+    provider: openai
+    endpoint: https://api.openai.com/v1/chat/completions
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
   # ---- OpenAI (Responses endpoint) -----------------------------------------
   # Newer models are served via /v1/responses
   gpt-4.1:
