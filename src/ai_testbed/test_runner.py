@@ -54,7 +54,7 @@ class ModelTestRunner:
     """Runs model tests defined in YAML configuration files with parallel execution."""
     
     def __init__(self, models_config_path: str = "config/models.yaml", 
-                 tests_config_path: str = "config/tests.yaml",
+                 tests_config_path: str = "config/tests-cases.yaml",
                  test_run_config_path: str = "config/test-run.yaml",
                  max_workers: int = 5):
         self.models_config = load_app_config(models_config_path)
@@ -311,7 +311,7 @@ class ModelTestRunner:
         # Validate API keys for all models before starting execution
         self._validate_all_model_api_keys()
         
-        # Get all test names from tests.yaml
+        # Get all test names from tests-cases.yaml
         test_names = list(self.tests_config.tests.keys())
         
         # Calculate total number of test runs

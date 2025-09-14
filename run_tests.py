@@ -29,7 +29,7 @@ def main():
     )
     parser.add_argument(
         "--tests-config", 
-        default="config/tests.yaml",
+        default="config/tests-cases.yaml",
         help="Path to tests configuration file"
     )
     parser.add_argument(
@@ -67,7 +67,7 @@ def main():
     try:
         # If using --run, don't pass tests_config as it will be loaded from the config file
         if args.run:
-            runner = ModelTestRunner(args.models_config, "config/tests.yaml", test_run_config_path)
+            runner = ModelTestRunner(args.models_config, "config/tests-cases.yaml", test_run_config_path)
         else:
             runner = ModelTestRunner(args.models_config, args.tests_config, test_run_config_path)
         

@@ -1,10 +1,10 @@
 # Simplified test run configuration
-# Automatically runs all tests from tests.yaml against specified models
-tests: config/tests.yaml
+# Automatically runs all tests from tests-cases.yaml against specified models
+tests: config/tests-cases.yaml
 runs_per_test: 2  # Default number of runs per test
 
 models:
   # OpenAI models
   - name: "gpt-3.5-turbo"
-  - name: "claude-opus-4-1-20250805"
+
 

@@ -1,6 +1,0 @@
-tests: config/tests.yaml
-runs_per_test: 10
-models:
-  - name: "gpt-3.5-turbo"
-  - name: "claude-opus-4-1-20250805"
-
