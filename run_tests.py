@@ -65,7 +65,11 @@ def main():
         test_run_config_path = args.run
     
     try:
-        runner = ModelTestRunner(args.models_config, args.tests_config, test_run_config_path)
+        # If using --run, don't pass tests_config as it will be loaded from the config file
+        if args.run:
+            runner = ModelTestRunner(args.models_config, "config/tests.yaml", test_run_config_path)
+        else:
+            runner = ModelTestRunner(args.models_config, args.tests_config, test_run_config_path)
         
         # Override runs_per_test if specified via command line
         if args.runs is not None:

@@ -58,8 +58,12 @@ class ModelTestRunner:
                  test_run_config_path: str = "config/test-run.yaml",
                  max_workers: int = 5):
         self.models_config = load_app_config(models_config_path)
-        self.tests_config = load_test_config(tests_config_path)
-        self.test_run_config = load_test_run_config(test_run_config_path)
+        self.test_run_config, self.tests_config = load_test_run_config(test_run_config_path)
+        
+        # If tests_config is None (no tests field in config), fall back to tests_config_path
+        if self.tests_config is None:
+            self.tests_config = load_test_config(tests_config_path)
+        
         self.max_workers = max_workers
         
         # Rate limiting controls for different API providers

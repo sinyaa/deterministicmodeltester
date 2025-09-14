@@ -29,6 +29,7 @@ class ModelRunConfig(BaseModel):
 class TestRunConfig(BaseModel):
     models: List[ModelRunConfig]  # List of models to test with their run counts
     runs_per_test: int = 1  # Default number of runs per test
+    tests: Optional[str] = None  # Optional path to test configuration file
 
 def _env_expand(value: str) -> str:
     # Support ${VAR:-default} and ${VAR} interpolation from the shell-ish syntax in YAML
@@ -69,7 +70,7 @@ def load_test_config(path: str) -> TestSuiteConfig:
     expanded = walk(data)
     return TestSuiteConfig(**expanded)
 
-def load_test_run_config(path: str) -> TestRunConfig:
+def load_test_run_config(path: str) -> tuple[TestRunConfig, Optional[TestSuiteConfig]]:
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
     # Expand env vars only for str leaf nodes
@@ -82,4 +83,12 @@ def load_test_run_config(path: str) -> TestRunConfig:
             return _env_expand(obj)
         return obj
     expanded = walk(data)
-    return TestRunConfig(**expanded)
+    
+    test_run_config = TestRunConfig(**expanded)
+    
+    # Load test suite config if tests field is specified
+    test_suite_config = None
+    if test_run_config.tests:
+        test_suite_config = load_test_config(test_run_config.tests)
+    
+    return test_run_config, test_suite_config

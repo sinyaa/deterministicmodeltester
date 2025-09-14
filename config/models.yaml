@@ -13,6 +13,18 @@ models:
     api_key: ${MOCK_API_KEY:-dummy}
     timeout_s: 10
 
+  half-echo:
+    provider: half-echo
+    endpoint: mock://half-echo
+    api_key: ${MOCK_API_KEY:-dummy}
+    timeout_s: 5
+
+  reverse-echo:
+    provider: reverse-echo
+    endpoint: mock://reverse-echo
+    api_key: ${MOCK_API_KEY:-dummy}
+    timeout_s: 5
+
   # ---- OpenAI (legacy Chat Completions endpoint) ----------------------------
   # These models are accessed via /v1/chat/completions
   gpt-3.5-turbo:

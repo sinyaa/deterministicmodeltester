@@ -1,0 +1,6 @@
+tests: config/mocktestscases.yaml
+runs_per_test: 3
+models:
+  - name: "echo-local"
+  - name: "half-echo"
+  - name: "reverse-echo"

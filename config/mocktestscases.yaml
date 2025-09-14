@@ -1,0 +1,70 @@
+tests:
+  Test_10_Chars:
+    name: "10 Character Test"
+    description: "Test with exactly 10 characters"
+    prompt: "1234567890"
+    expected_output: "1234567890"
+    exact_match: true
+
+  Test_20_Chars:
+    name: "20 Character Test"
+    description: "Test with exactly 20 characters"
+    prompt: "12345678901234567890"
+    expected_output: "12345678901234567890"
+    exact_match: true
+
+  Test_30_Chars:
+    name: "30 Character Test"
+    description: "Test with exactly 30 characters"
+    prompt: "123456789012345678901234567890"
+    expected_output: "123456789012345678901234567890"
+    exact_match: true
+
+  Test_40_Chars:
+    name: "40 Character Test"
+    description: "Test with exactly 40 characters"
+    prompt: "1234567890123456789012345678901234567890"
+    expected_output: "1234567890123456789012345678901234567890"
+    exact_match: true
+
+  Test_50_Chars:
+    name: "50 Character Test"
+    description: "Test with exactly 50 characters"
+    prompt: "12345678901234567890123456789012345678901234567890"
+    expected_output: "12345678901234567890123456789012345678901234567890"
+    exact_match: true
+
+  Test_60_Chars:
+    name: "60 Character Test"
+    description: "Test with exactly 60 characters"
+    prompt: "123456789012345678901234567890123456789012345678901234567890"
+    expected_output: "123456789012345678901234567890123456789012345678901234567890"
+    exact_match: true
+
+  Test_70_Chars:
+    name: "70 Character Test"
+    description: "Test with exactly 70 characters"
+    prompt: "1234567890123456789012345678901234567890123456789012345678901234567890"
+    expected_output: "1234567890123456789012345678901234567890123456789012345678901234567890"
+    exact_match: true
+
+  Test_80_Chars:
+    name: "80 Character Test"
+    description: "Test with exactly 80 characters"
+    prompt: "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    expected_output: "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    exact_match: true
+
+  Test_90_Chars:
+    name: "90 Character Test"
+    description: "Test with exactly 90 characters"
+    prompt: "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    expected_output: "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    exact_match: true
+
+  Test_100_Chars:
+    name: "100 Character Test"
+    description: "Test with exactly 100 characters"
+    prompt: "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    expected_output: "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    exact_match: true

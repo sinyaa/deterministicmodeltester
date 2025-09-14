@@ -6,6 +6,8 @@ from .openai import OpenAIConnector
 from .echo import EchoConnector
 from .anthropic import AnthropicConnector
 from .openai_realtime import OpenAIRealtimeConnector
+from .half_echo import HalfEchoConnector
+from .reverse_echo import ReverseEchoConnector
 
 # Map provider id -> connector class
 PROVIDERS: Dict[str, Type[BaseConnector]] = {
@@ -14,6 +16,8 @@ PROVIDERS: Dict[str, Type[BaseConnector]] = {
     "echo": EchoConnector,
     "anthropic": AnthropicConnector,
     "openai-realtime": OpenAIRealtimeConnector,
+    "half-echo": HalfEchoConnector,
+    "reverse-echo": ReverseEchoConnector,
 }
 
 def create_connector(model_name: str, cfg) -> BaseConnector:
