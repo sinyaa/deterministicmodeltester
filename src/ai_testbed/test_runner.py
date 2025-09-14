@@ -111,10 +111,6 @@ class ModelTestRunner:
         semaphore = self._get_provider_semaphore(model_name)
         
         with semaphore:
-            # Log test start
-            run_info = f" (Run {run_number})" if run_number > 1 else ""
-            print(f"  {Fore.CYAN}→{Style.RESET_ALL} Running {Fore.YELLOW}{test_name}{Style.RESET_ALL} on {Fore.BLUE}{model_name}{Style.RESET_ALL}{run_info}...", end=" ", flush=True)
-            
             start_time = time.time()
             
             try:
@@ -137,13 +133,6 @@ class ModelTestRunner:
                     passed = test_config.expected_output.lower() in actual_output.lower()
                     distance = None  # No distance calculation for substring matches
                 
-                # Log test result
-                elapsed_time = time.time() - start_time
-                if passed:
-                    print(f"{Fore.GREEN}✅ PASS{Style.RESET_ALL} ({elapsed_time:.2f}s)")
-                else:
-                    print(f"{Fore.RED}❌ FAIL{Style.RESET_ALL} ({elapsed_time:.2f}s)")
-                
                 return TestResult(
                     test_name=test_name,
                     model_name=model_name,
@@ -156,8 +145,6 @@ class ModelTestRunner:
                 )
                 
             except Exception as e:
-                elapsed_time = time.time() - start_time
-                print(f"{Fore.RED}❌ ERROR{Style.RESET_ALL} ({elapsed_time:.2f}s)")
                 return TestResult(
                     test_name=test_name,
                     model_name=model_name,
@@ -261,7 +248,8 @@ class ModelTestRunner:
                     test_runs = len(results)
                     passed = sum(1 for r in results if r.passed)
                     models_tested = len(set(r.model_name for r in results))
-                    print(f"{Fore.GREEN}✅{Style.RESET_ALL} {Fore.YELLOW}{test_name}{Style.RESET_ALL} completed: {passed}/{test_runs} passed ({models_tested} models) ({completed_tests}/{len(test_names)} tests)")
+                    runs_per_model = test_runs // models_tested if models_tested > 0 else 0
+                    print(f"{Fore.GREEN}✅{Style.RESET_ALL} {Fore.YELLOW}{test_name}{Style.RESET_ALL} completed: {passed}/{test_runs} passed ({models_tested} models × {runs_per_model} runs) ({completed_tests}/{len(test_names)} tests)")
                     
                 except Exception as e:
                     print(f"{Fore.RED}❌{Style.RESET_ALL} {Fore.YELLOW}{test_name}{Style.RESET_ALL} failed: {str(e)}")
@@ -351,11 +339,10 @@ class ModelTestRunner:
             stats['avg_distance'] = overall_avg_distance
             stats['score'] = overall_score
         
-        # Sort models by score (descending)
+        # Sort models by average distance (ascending - lower distance is better)
         sorted_models = sorted(
             model_stats.items(), 
-            key=lambda x: x[1]['score'],
-            reverse=True
+            key=lambda x: x[1]['avg_distance']
         )
         
         # Print table header
@@ -402,8 +389,21 @@ class ModelTestRunner:
         
         all_models = sorted(list(all_models))
         
-        # Get all test names
-        test_names = sorted(results.keys())
+        # Get all test names and sort by overall pass rate (descending - higher pass rate is better)
+        test_names = list(results.keys())
+        
+        # Calculate pass rate for each test across all models
+        test_pass_rates = []
+        for test_name in test_names:
+            test_results = results[test_name]
+            total_passed = sum(1 for r in test_results if r.passed)
+            total_tests = len(test_results)
+            pass_rate = (total_passed / total_tests * 100) if total_tests > 0 else 0
+            test_pass_rates.append((test_name, pass_rate))
+        
+        # Sort by pass rate (descending)
+        test_pass_rates.sort(key=lambda x: x[1], reverse=True)
+        test_names = [name for name, _ in test_pass_rates]
         
         if not test_names or not all_models:
             print("No test results to display")
