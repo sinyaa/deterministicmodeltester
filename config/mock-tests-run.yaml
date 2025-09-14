@@ -1,4 +1,4 @@
-tests: config/mocktestscases.yaml
+tests: config/mock-tests-cases.yaml
 runs_per_test: 3
 models:
   - name: "echo-local"

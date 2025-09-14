@@ -1,6 +1,6 @@
 # Full test run configuration with all supported models
 # Automatically runs all tests from tests-cases.yaml against specified models
-tests: config/tests-cases-added.yaml
+tests: config/tests-cases.yaml
 runs_per_test:  100  # Default number of runs per test (reduced for comprehensive testing)
 
 models:
