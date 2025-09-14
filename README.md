@@ -66,8 +66,8 @@ The AI Model Testbed supports a wide range of AI models from multiple providers:
 - `gpt-4.1-mini` - Smaller, faster version of GPT-4.1
 - `gpt-4o` - Multimodal model with vision capabilities
 - `gpt-4o-mini` - Compact version of GPT-4o
-- `gpt-4o-mini-realtime-preview` - Real-time preview of GPT-4o mini
-- `gpt-4o-realtime-preview` - Real-time preview of GPT-4o
+- `gpt-4o-mini-realtime-preview` - Real-time preview of GPT-4o mini (uses standard API for testing)
+- `gpt-4o-realtime-preview` - Real-time preview of GPT-4o (uses standard API for testing)
 
 **O1 Family:**
 - `o1-mini` - Smaller version of the O1 reasoning model
@@ -150,7 +150,7 @@ Based on testing results, here are some performance characteristics:
 **⚠️ Considerations:**
 - Some models may have access restrictions based on your API key
 - GPT-5 family models may not be available to all accounts
-- Realtime preview models may have different behavior patterns
+- Realtime preview models use standard API endpoints for testing (not WebSocket)
 - Model availability can change over time
 
 ## Quick Start

@@ -1,0 +1,40 @@
+# Full test run configuration with all supported models
+# Automatically runs all tests from tests.yaml against specified models
+runs_per_test: 2  # Default number of runs per test (reduced for comprehensive testing)
+
+models:
+  # ---- OpenAI Models ----
+  # Legacy Chat Completions API
+  - name: "gpt-3.5-turbo"
+  - name: "gpt-3.5-turbo-16k"
+  - name: "gpt-4"
+
+  # Responses API - GPT-4 Family
+  - name: "gpt-4.1"
+  - name: "gpt-4.1-mini"
+  - name: "gpt-4o"
+  - name: "gpt-4o-mini"
+  - name: "gpt-4o-mini-realtime-preview"
+  - name: "gpt-4o-realtime-preview"
+
+  # O1 Family
+  - name: "o3"
+  - name: "o3-mini"
+  - name: "o4-mini"
+
+  # GPT-5 Family (availability varies by account)
+  - name: "gpt-5"
+  - name: "gpt-5-mini"
+  - name: "gpt-5-nano"
+
+  # ---- Anthropic Claude Models ----
+  # Claude 4 Family
+  - name: "claude-opus-4-1-20250805"
+  - name: "claude-opus-4-20250514"
+  - name: "claude-sonnet-4-20250514"
+
+  # Claude 3 Family
+  - name: "claude-3-7-sonnet-20250219"
+  - name: "claude-3-5-haiku-20241022"
+  - name: "claude-3-haiku-20240307"
+

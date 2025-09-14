@@ -5,6 +5,7 @@ from .mock import MockConnector
 from .openai import OpenAIConnector
 from .echo import EchoConnector
 from .anthropic import AnthropicConnector
+from .openai_realtime import OpenAIRealtimeConnector
 
 # Map provider id -> connector class
 PROVIDERS: Dict[str, Type[BaseConnector]] = {
@@ -12,6 +13,7 @@ PROVIDERS: Dict[str, Type[BaseConnector]] = {
     "openai": OpenAIConnector,
     "echo": EchoConnector,
     "anthropic": AnthropicConnector,
+    "openai-realtime": OpenAIRealtimeConnector,
 }
 
 def create_connector(model_name: str, cfg) -> BaseConnector:

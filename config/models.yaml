@@ -60,14 +60,14 @@ models:
     timeout_s: 30
 
   gpt-4o-mini-realtime-preview:
-    provider: openai
-    endpoint: https://api.openai.com/v1/responses
+    provider: openai-realtime
+    endpoint: https://api.openai.com/v1/realtime/sessions
     api_key: ${OPENAI_API_KEY}
     timeout_s: 30
 
   gpt-4o-realtime-preview:
-    provider: openai
-    endpoint: https://api.openai.com/v1/responses
+    provider: openai-realtime
+    endpoint: https://api.openai.com/v1/realtime/sessions
     api_key: ${OPENAI_API_KEY}
     timeout_s: 30
 
