@@ -9,7 +9,12 @@ class OpenAIConnector(BaseConnector):
     """OpenAI API connector for GPT models."""
     
     def _should_retry_empty_response(self, result: GenerateResult, attempt: int) -> bool:
-        """Retry on empty responses for OpenAI API calls."""
+        """Retry on empty responses for OpenAI API calls, but not on authentication errors."""
+        # Don't retry if there's an error (authentication, etc.)
+        if result.error is not None:
+            return False
+        
+        # Only retry on truly empty responses (no error)
         return not result.text or result.text.strip() == ""
 
     def _generate_single(self, prompt: str) -> GenerateResult:

@@ -78,6 +78,62 @@ class ModelTestRunner:
         provider = self.models_config.models[model_name].provider
         return self.rate_limiters.get(provider, self.rate_limiters['echo'])
     
+    def _validate_all_model_api_keys(self) -> None:
+        """Validate API keys for all models before starting execution."""
+        for model_run in self.test_run_config.models:
+            model_name = model_run.name
+            if model_name in self.models_config.models:
+                model_config = self.models_config.models[model_name]
+                # Create a temporary connector to validate API key
+                try:
+                    # Only validate API keys, don't actually make network calls
+                    # Check if it's a local provider first
+                    if self._is_local_provider(model_config.endpoint, model_name):
+                        continue  # Skip validation for local providers
+                    
+                    # For remote providers, just check if API key exists and is not dummy
+                    if not model_config.api_key or model_config.api_key.strip() == "" or model_config.api_key in ["dummy", "test-key", "mock-key", "${OPENAI_API_KEY}", "${ANTHROPIC_API_KEY}"]:
+                        provider_name = self._get_provider_name(model_config.endpoint)
+                        env_var_name = self._get_env_var_name(model_config.endpoint)
+                        print(f"\n{Fore.RED}🚫 API key is missing or invalid for {provider_name} model '{model_name}'{Style.RESET_ALL}")
+                        print(f"   Please set the {env_var_name} environment variable")
+                        print(f"   Example: $env:{env_var_name}=\"your-api-key-here\"")
+                        print(f"{Fore.YELLOW}💡 Tip: Set your API key and try again{Style.RESET_ALL}")
+                        print(f"{Fore.RED}❌ Execution stopped due to missing API key{Style.RESET_ALL}")
+                        import sys
+                        sys.exit(1)
+                        
+                except Exception as e:
+                    # If there's any other error, just continue - let the actual test handle it
+                    continue
+    
+    def _is_local_provider(self, endpoint: str, model_name: str) -> bool:
+        """Check if this is a local provider that doesn't need API keys."""
+        return (
+            "mock://" in endpoint or 
+            endpoint.startswith("mock://") or
+            model_name.startswith("echo-") or
+            model_name.startswith("mock-")
+        )
+
+    def _get_provider_name(self, endpoint: str) -> str:
+        """Get human-readable provider name."""
+        if "openai" in endpoint:
+            return "OpenAI"
+        elif "anthropic" in endpoint:
+            return "Anthropic"
+        else:
+            return "API"
+
+    def _get_env_var_name(self, endpoint: str) -> str:
+        """Get the environment variable name for this provider."""
+        if "openai" in endpoint:
+            return "OPENAI_API_KEY"
+        elif "anthropic" in endpoint:
+            return "ANTHROPIC_API_KEY"
+        else:
+            return "API_KEY"
+    
     def run_single_test(self, test_name: str, model_name: str, run_number: int = 1) -> TestResult:
         """Run a single test against a specific model with rate limiting."""
         if test_name not in self.tests_config.tests:
@@ -144,6 +200,18 @@ class ModelTestRunner:
                     distance=distance
                 )
                 
+            except ValueError as e:
+                # Handle other validation errors
+                return TestResult(
+                    test_name=test_name,
+                    model_name=model_name,
+                    passed=False,
+                    expected=test_config.expected_output,
+                    actual="",
+                    run_number=run_number,
+                    error=str(e),
+                    distance=None
+                )
             except Exception as e:
                 return TestResult(
                     test_name=test_name,
@@ -163,22 +231,33 @@ class ModelTestRunner:
         
         results = []
         
+        # Validate API keys for all models before starting parallel execution
+        self._validate_all_model_api_keys()
+        
         # Create all test tasks for this test (all models × all runs)
         test_tasks = []
         for model_run in self.test_run_config.models:
             model_name = model_run.name
-            # Use model-specific runs if specified, otherwise use runs_per_test
-            runs = model_run.runs if hasattr(model_run, 'runs') and model_run.runs > 1 else self.test_run_config.runs_per_test
+            # Use model-specific runs if explicitly specified, otherwise use runs_per_test
+            # Check if runs was explicitly set by looking at the model_run object's __fields_set__
+            if hasattr(model_run, '__fields_set__') and 'runs' in model_run.__fields_set__:
+                runs = model_run.runs
+            else:
+                runs = self.test_run_config.runs_per_test
             
             for run_num in range(1, runs + 1):
                 test_tasks.append((test_name, model_name, run_num))
+        
+        # Calculate total runs for this test
+        total_runs = len(test_tasks)
+        completed_runs = 0
         
         # Execute all model runs for this test in parallel
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # Submit all model tasks for this test
             future_to_task = {
-                executor.submit(self.run_single_test, test_name, model_name, run_num): (test_name, model_name, run_num)
-                for test_name, model_name, run_num in test_tasks
+                executor.submit(self.run_single_test, task_test_name, task_model_name, task_run_num): (task_test_name, task_model_name, task_run_num)
+                for task_test_name, task_model_name, task_run_num in test_tasks
             }
             
             # Collect results as they complete
@@ -186,20 +265,38 @@ class ModelTestRunner:
                 try:
                     result = future.result()
                     results.append(result)
+                    completed_runs += 1
+                    
+                    # Calculate and show progress within this test
+                    progress_percentage = int((completed_runs / total_runs) * 100)
+                    # Clear the line and print progress (ensure we clear any previous content)
+                    print(f"\r{' ' * 100}\r{Fore.CYAN}🔄 {test_name}{Style.RESET_ALL} progress: {completed_runs}/{total_runs} runs ({progress_percentage}%)", end="", flush=True)
+                    
                 except Exception as e:
-                    test_name, model_name, run_num = future_to_task[future]
+                    task_test_name, task_model_name, task_run_num = future_to_task[future]
+                    # Get expected output from test config for proper error reporting
+                    expected_output = ""
+                    if task_test_name in self.tests_config.tests:
+                        expected_output = self.tests_config.tests[task_test_name].expected_output
+                    
                     # Create error result
                     error_result = TestResult(
-                        test_name=test_name,
-                        model_name=model_name,
+                        test_name=task_test_name,
+                        model_name=task_model_name,
                         passed=False,
-                        expected="",
+                        expected=expected_output,
                         actual="",
-                        run_number=run_num,
+                        run_number=task_run_num,
                         error=f"Model execution failed: {str(e)}",
                         distance=None
                     )
                     results.append(error_result)
+                    completed_runs += 1
+                    
+                    # Calculate and show progress within this test
+                    progress_percentage = int((completed_runs / total_runs) * 100)
+                    # Clear the line and print progress (ensure we clear any previous content)
+                    print(f"\r{' ' * 100}\r{Fore.CYAN}🔄 {test_name}{Style.RESET_ALL} progress: {completed_runs}/{total_runs} runs ({progress_percentage}%)", end="", flush=True)
         
         return results
     
@@ -207,19 +304,21 @@ class ModelTestRunner:
         """Run all tests against their configured models with parallel execution."""
         all_results = {}
         
+        # Validate API keys for all models before starting execution
+        self._validate_all_model_api_keys()
+        
         # Get all test names from tests.yaml
         test_names = list(self.tests_config.tests.keys())
         
         # Calculate total number of test runs
-        total_runs = len(test_names) * sum(model_run.runs for model_run in self.test_run_config.models)
+        total_runs = len(test_names) * self.test_run_config.runs_per_test
         
-        print(f"\n{Fore.CYAN}🚀 Starting parallel test execution (Phase 2: Model-Level)...{Style.RESET_ALL}")
+        print(f"\n{Fore.CYAN}🚀 Starting parallel test execution ..{Style.RESET_ALL}")
         print(f"   {Fore.YELLOW}Tests:{Style.RESET_ALL} {len(test_names)}")
         print(f"   {Fore.YELLOW}Total Runs:{Style.RESET_ALL} {total_runs}")
         print(f"   {Fore.YELLOW}Models:{Style.RESET_ALL} {len(self.test_run_config.models)}")
         print(f"   {Fore.YELLOW}Max Workers:{Style.RESET_ALL} {self.max_workers}")
         print(f"   {Fore.YELLOW}Rate Limits:{Style.RESET_ALL} OpenAI: 10, Anthropic: 5, Local: 20")
-        print(f"   {Fore.YELLOW}Parallelization:{Style.RESET_ALL} Test-level + Model-level (10-20x speedup)")
         print()
         
         # Create a list of all test tasks to run in parallel
@@ -237,6 +336,8 @@ class ModelTestRunner:
             
             # Collect results as they complete
             completed_tests = 0
+            total_tests = len(test_names)
+            
             for future in as_completed(future_to_test):
                 test_name = future_to_test[future]
                 try:
@@ -244,17 +345,21 @@ class ModelTestRunner:
                     all_results[test_name] = results
                     completed_tests += 1
                     
-                    # Show progress
+                    # Show test completion summary
                     test_runs = len(results)
                     passed = sum(1 for r in results if r.passed)
                     models_tested = len(set(r.model_name for r in results))
-                    runs_per_model = test_runs // models_tested if models_tested > 0 else 0
-                    print(f"{Fore.GREEN}✅{Style.RESET_ALL} {Fore.YELLOW}{test_name}{Style.RESET_ALL} completed: {passed}/{test_runs} passed ({models_tested} models × {runs_per_model} runs) ({completed_tests}/{len(test_names)} tests)")
+                    runs_per_model = test_runs // models_tested if models_tested > 0 and test_runs > 0 else 0
+                    
+                    # Clear the progress line and print test completion
+                    print(f"\r{' ' * 80}\r{Fore.GREEN}✅{Style.RESET_ALL} {Fore.YELLOW}{test_name}{Style.RESET_ALL} completed: {passed}/{test_runs} passed ({models_tested} models × {runs_per_model} runs) ({completed_tests}/{total_tests} tests)")
+                    print(f"100%")
                     
                 except Exception as e:
-                    print(f"{Fore.RED}❌{Style.RESET_ALL} {Fore.YELLOW}{test_name}{Style.RESET_ALL} failed: {str(e)}")
-                    all_results[test_name] = []
                     completed_tests += 1
+                    print(f"\r{' ' * 80}\r{Fore.RED}❌{Style.RESET_ALL} {Fore.YELLOW}{test_name}{Style.RESET_ALL} failed: {str(e)}")
+                    print(f"100%")
+                    all_results[test_name] = []
         
         print(f"\n{Fore.GREEN}🎉 All tests completed!{Style.RESET_ALL}")
         return all_results

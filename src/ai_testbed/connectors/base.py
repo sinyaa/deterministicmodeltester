@@ -9,7 +9,7 @@ from typing import Optional
 class GenerateResult:
     text: str
     model: str
-    error: str = None
+    error: Optional[str] = None
 
 class BaseConnector(ABC):
     """Common interface for all model connectors."""
@@ -22,6 +22,51 @@ class BaseConnector(ABC):
         self.timeout_s = timeout_s
         self.max_retries = max_retries
         self.retry_delay = retry_delay
+        
+        # Validate API key for non-local providers
+        self._validate_api_key()
+
+    def _validate_api_key(self) -> None:
+        """Validate that API key is present for non-local providers."""
+        # Skip validation for local/mock providers
+        if self._is_local_provider():
+            return
+            
+        # Check if API key is missing or invalid
+        if not self.api_key or self.api_key.strip() == "" or self.api_key in ["dummy", "test-key", "mock-key", "${OPENAI_API_KEY}", "${ANTHROPIC_API_KEY}"]:
+            provider_name = self._get_provider_name()
+            raise ValueError(
+                f"❌ API key is missing or invalid for {provider_name} model '{self.model_name}'\n"
+                f"   Please set the {self._get_env_var_name()} environment variable\n"
+                f"   Example: $env:{self._get_env_var_name()}=\"your-api-key-here\""
+            )
+
+    def _is_local_provider(self) -> bool:
+        """Check if this is a local provider that doesn't need API keys."""
+        return (
+            "mock://" in self.endpoint or 
+            self.endpoint.startswith("mock://") or
+            self.model_name.startswith("echo-") or
+            self.model_name.startswith("mock-")
+        )
+
+    def _get_provider_name(self) -> str:
+        """Get human-readable provider name."""
+        if "openai" in self.endpoint:
+            return "OpenAI"
+        elif "anthropic" in self.endpoint:
+            return "Anthropic"
+        else:
+            return "API"
+
+    def _get_env_var_name(self) -> str:
+        """Get the environment variable name for this provider."""
+        if "openai" in self.endpoint:
+            return "OPENAI_API_KEY"
+        elif "anthropic" in self.endpoint:
+            return "ANTHROPIC_API_KEY"
+        else:
+            return "API_KEY"
 
     def _should_retry(self, result: GenerateResult, attempt: int) -> bool:
         """Determine if we should retry based on the result and attempt number."""
