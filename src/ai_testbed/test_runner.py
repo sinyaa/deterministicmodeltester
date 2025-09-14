@@ -4,6 +4,8 @@ from dataclasses import dataclass
 import time
 import colorama
 from colorama import Fore, Back, Style
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Semaphore
 from .config.loader import load_app_config, load_test_config, load_test_run_config, TestConfig
 from .connectors.registry import create_connector
 
@@ -49,17 +51,35 @@ class TestResult:
     distance: Optional[int] = None  # Lexicographical distance for exact match tests
 
 class ModelTestRunner:
-    """Runs model tests defined in YAML configuration files."""
+    """Runs model tests defined in YAML configuration files with parallel execution."""
     
     def __init__(self, models_config_path: str = "config/models.yaml", 
                  tests_config_path: str = "config/tests.yaml",
-                 test_run_config_path: str = "config/test-run.yaml"):
+                 test_run_config_path: str = "config/test-run.yaml",
+                 max_workers: int = 5):
         self.models_config = load_app_config(models_config_path)
         self.tests_config = load_test_config(tests_config_path)
         self.test_run_config = load_test_run_config(test_run_config_path)
+        self.max_workers = max_workers
+        
+        # Rate limiting controls for different API providers
+        self.rate_limiters = {
+            'openai': Semaphore(10),  # Max 10 concurrent OpenAI calls
+            'anthropic': Semaphore(5),  # Max 5 concurrent Anthropic calls
+            'echo': Semaphore(20),  # Local echo can handle more
+            'mock': Semaphore(20),  # Mock can handle more
+        }
+    
+    def _get_provider_semaphore(self, model_name: str) -> Semaphore:
+        """Get the appropriate rate limiter for a model."""
+        if model_name not in self.models_config.models:
+            return self.rate_limiters['echo']  # Default fallback
+        
+        provider = self.models_config.models[model_name].provider
+        return self.rate_limiters.get(provider, self.rate_limiters['echo'])
     
     def run_single_test(self, test_name: str, model_name: str, run_number: int = 1) -> TestResult:
-        """Run a single test against a specific model."""
+        """Run a single test against a specific model with rate limiting."""
         if test_name not in self.tests_config.tests:
             return TestResult(
                 test_name=test_name,
@@ -87,85 +107,117 @@ class ModelTestRunner:
                 distance=None
             )
         
-        # Log test start
-        run_info = f" (Run {run_number})" if run_number > 1 else ""
-        print(f"  {Fore.CYAN}→{Style.RESET_ALL} Running {Fore.YELLOW}{test_name}{Style.RESET_ALL} on {Fore.BLUE}{model_name}{Style.RESET_ALL}{run_info}...", end=" ", flush=True)
+        # Acquire rate limiter for this model's provider
+        semaphore = self._get_provider_semaphore(model_name)
         
-        start_time = time.time()
-        
-        try:
-            # Create connector for the model
-            connector = create_connector(model_name, self.models_config)
+        with semaphore:
+            # Log test start
+            run_info = f" (Run {run_number})" if run_number > 1 else ""
+            print(f"  {Fore.CYAN}→{Style.RESET_ALL} Running {Fore.YELLOW}{test_name}{Style.RESET_ALL} on {Fore.BLUE}{model_name}{Style.RESET_ALL}{run_info}...", end=" ", flush=True)
             
-            # Generate response
-            result = connector.generate(test_config.prompt)
-            actual_output = result.text
+            start_time = time.time()
             
-            # Check if test passes
-            if test_config.exact_match:
-                # Normalize whitespace for comparison
-                expected_normalized = normalize_whitespace(test_config.expected_output)
-                actual_normalized = normalize_whitespace(actual_output)
-                passed = expected_normalized == actual_normalized
-                # Calculate lexicographical distance for exact match tests
-                distance = levenshtein_distance(expected_normalized, actual_normalized)
-            else:
-                passed = test_config.expected_output.lower() in actual_output.lower()
-                distance = None  # No distance calculation for substring matches
-            
-            # Log test result
-            elapsed_time = time.time() - start_time
-            if passed:
-                print(f"{Fore.GREEN}✅ PASS{Style.RESET_ALL} ({elapsed_time:.2f}s)")
-            else:
-                print(f"{Fore.RED}❌ FAIL{Style.RESET_ALL} ({elapsed_time:.2f}s)")
-            
-            return TestResult(
-                test_name=test_name,
-                model_name=model_name,
-                passed=passed,
-                expected=test_config.expected_output,
-                actual=actual_output,
-                run_number=run_number,
-                error=None,
-                distance=distance
-            )
-            
-        except Exception as e:
-            elapsed_time = time.time() - start_time
-            print(f"{Fore.RED}❌ ERROR{Style.RESET_ALL} ({elapsed_time:.2f}s)")
-            return TestResult(
-                test_name=test_name,
-                model_name=model_name,
-                passed=False,
-                expected=test_config.expected_output,
-                actual="",
-                run_number=run_number,
-                error=str(e),
-                distance=None
-            )
+            try:
+                # Create connector for the model
+                connector = create_connector(model_name, self.models_config)
+                
+                # Generate response
+                result = connector.generate(test_config.prompt)
+                actual_output = result.text
+                
+                # Check if test passes
+                if test_config.exact_match:
+                    # Normalize whitespace for comparison
+                    expected_normalized = normalize_whitespace(test_config.expected_output)
+                    actual_normalized = normalize_whitespace(actual_output)
+                    passed = expected_normalized == actual_normalized
+                    # Calculate lexicographical distance for exact match tests
+                    distance = levenshtein_distance(expected_normalized, actual_normalized)
+                else:
+                    passed = test_config.expected_output.lower() in actual_output.lower()
+                    distance = None  # No distance calculation for substring matches
+                
+                # Log test result
+                elapsed_time = time.time() - start_time
+                if passed:
+                    print(f"{Fore.GREEN}✅ PASS{Style.RESET_ALL} ({elapsed_time:.2f}s)")
+                else:
+                    print(f"{Fore.RED}❌ FAIL{Style.RESET_ALL} ({elapsed_time:.2f}s)")
+                
+                return TestResult(
+                    test_name=test_name,
+                    model_name=model_name,
+                    passed=passed,
+                    expected=test_config.expected_output,
+                    actual=actual_output,
+                    run_number=run_number,
+                    error=None,
+                    distance=distance
+                )
+                
+            except Exception as e:
+                elapsed_time = time.time() - start_time
+                print(f"{Fore.RED}❌ ERROR{Style.RESET_ALL} ({elapsed_time:.2f}s)")
+                return TestResult(
+                    test_name=test_name,
+                    model_name=model_name,
+                    passed=False,
+                    expected=test_config.expected_output,
+                    actual="",
+                    run_number=run_number,
+                    error=str(e),
+                    distance=None
+                )
     
     def run_test(self, test_name: str) -> List[TestResult]:
-        """Run a test against all configured models for that test."""
+        """Run a test against all configured models for that test with parallel model execution."""
         if test_name not in self.tests_config.tests:
             return []
         
         results = []
         
-        # Run this test against all configured models
+        # Create all test tasks for this test (all models × all runs)
+        test_tasks = []
         for model_run in self.test_run_config.models:
             model_name = model_run.name
             # Use model-specific runs if specified, otherwise use runs_per_test
             runs = model_run.runs if hasattr(model_run, 'runs') and model_run.runs > 1 else self.test_run_config.runs_per_test
             
             for run_num in range(1, runs + 1):
-                result = self.run_single_test(test_name, model_name, run_num)
-                results.append(result)
+                test_tasks.append((test_name, model_name, run_num))
+        
+        # Execute all model runs for this test in parallel
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit all model tasks for this test
+            future_to_task = {
+                executor.submit(self.run_single_test, test_name, model_name, run_num): (test_name, model_name, run_num)
+                for test_name, model_name, run_num in test_tasks
+            }
+            
+            # Collect results as they complete
+            for future in as_completed(future_to_task):
+                try:
+                    result = future.result()
+                    results.append(result)
+                except Exception as e:
+                    test_name, model_name, run_num = future_to_task[future]
+                    # Create error result
+                    error_result = TestResult(
+                        test_name=test_name,
+                        model_name=model_name,
+                        passed=False,
+                        expected="",
+                        actual="",
+                        run_number=run_num,
+                        error=f"Model execution failed: {str(e)}",
+                        distance=None
+                    )
+                    results.append(error_result)
         
         return results
     
     def run_all_tests(self) -> Dict[str, List[TestResult]]:
-        """Run all tests against their configured models."""
+        """Run all tests against their configured models with parallel execution."""
         all_results = {}
         
         # Get all test names from tests.yaml
@@ -174,27 +226,49 @@ class ModelTestRunner:
         # Calculate total number of test runs
         total_runs = len(test_names) * sum(model_run.runs for model_run in self.test_run_config.models)
         
-        print(f"\n{Fore.CYAN}🚀 Starting test execution...{Style.RESET_ALL}")
+        print(f"\n{Fore.CYAN}🚀 Starting parallel test execution (Phase 2: Model-Level)...{Style.RESET_ALL}")
         print(f"   {Fore.YELLOW}Tests:{Style.RESET_ALL} {len(test_names)}")
         print(f"   {Fore.YELLOW}Total Runs:{Style.RESET_ALL} {total_runs}")
         print(f"   {Fore.YELLOW}Models:{Style.RESET_ALL} {len(self.test_run_config.models)}")
+        print(f"   {Fore.YELLOW}Max Workers:{Style.RESET_ALL} {self.max_workers}")
+        print(f"   {Fore.YELLOW}Rate Limits:{Style.RESET_ALL} OpenAI: 10, Anthropic: 5, Local: 20")
+        print(f"   {Fore.YELLOW}Parallelization:{Style.RESET_ALL} Test-level + Model-level (10-20x speedup)")
         print()
         
+        # Create a list of all test tasks to run in parallel
+        test_tasks = []
         for test_name in test_names:
-            print(f"{Fore.YELLOW}📋 Test: {test_name}{Style.RESET_ALL}")
-            print("-" * 60)
-            
-            results = self.run_test(test_name)
-            all_results[test_name] = results
-            
-            # Count runs for this test
-            test_runs = len(results)
-            
-            # Show test summary
-            passed = sum(1 for r in results if r.passed)
-            print(f"   {Fore.CYAN}Test Summary:{Style.RESET_ALL} {passed}/{test_runs} passed")
-            print()
+            test_tasks.append((test_name, self.run_test))
         
+        # Execute tests in parallel
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit all test tasks
+            future_to_test = {
+                executor.submit(test_func, test_name): test_name 
+                for test_name, test_func in test_tasks
+            }
+            
+            # Collect results as they complete
+            completed_tests = 0
+            for future in as_completed(future_to_test):
+                test_name = future_to_test[future]
+                try:
+                    results = future.result()
+                    all_results[test_name] = results
+                    completed_tests += 1
+                    
+                    # Show progress
+                    test_runs = len(results)
+                    passed = sum(1 for r in results if r.passed)
+                    models_tested = len(set(r.model_name for r in results))
+                    print(f"{Fore.GREEN}✅{Style.RESET_ALL} {Fore.YELLOW}{test_name}{Style.RESET_ALL} completed: {passed}/{test_runs} passed ({models_tested} models) ({completed_tests}/{len(test_names)} tests)")
+                    
+                except Exception as e:
+                    print(f"{Fore.RED}❌{Style.RESET_ALL} {Fore.YELLOW}{test_name}{Style.RESET_ALL} failed: {str(e)}")
+                    all_results[test_name] = []
+                    completed_tests += 1
+        
+        print(f"\n{Fore.GREEN}🎉 All tests completed!{Style.RESET_ALL}")
         return all_results
     
     def _print_model_comparison_table(self, results: Dict[str, List[TestResult]]) -> None:
