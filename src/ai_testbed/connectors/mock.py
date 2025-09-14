@@ -4,7 +4,12 @@ from .base import BaseConnector, GenerateResult
 class MockConnector(BaseConnector):
     """Deterministic stub to simulate a model call without network."""
 
-    def generate(self, prompt: str) -> GenerateResult:
-        # Simple, predictable behavior for tests: reverse string and prefix with model name.
-        reply = f"MOCK[{self.model_name}]::" + prompt[::-1]
-        return GenerateResult(text=reply, model=self.model_name)
+    def _generate_single(self, prompt: str) -> GenerateResult:
+        # Different behavior based on model name for testing
+        if self.model_name == "mock-gpt-2":
+            # Echo the full input text
+            reply = prompt
+        else:
+            # Return first 10 characters of input text for other models
+            reply = prompt[:10] if len(prompt) >= 10 else prompt
+        return GenerateResult(text=reply, model=self.model_name, error=None)

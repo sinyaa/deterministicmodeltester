@@ -15,14 +15,20 @@ class TestConfig(BaseModel):
     prompt: str
     expected_output: str
     exact_match: bool = True
-    models: List[str]
 
 class AppConfig(BaseModel):
     models: Dict[str, ModelConfig]
 
 class TestSuiteConfig(BaseModel):
     tests: Dict[str, TestConfig]
-    runs_per_test: int = 1  # Number of times to run each test
+
+class ModelRunConfig(BaseModel):
+    name: str
+    runs: int = 1  # Default to 1 run if not specified
+
+class TestRunConfig(BaseModel):
+    models: List[ModelRunConfig]  # List of models to test with their run counts
+    runs_per_test: int = 1  # Default number of runs per test
 
 def _env_expand(value: str) -> str:
     # Support ${VAR:-default} and ${VAR} interpolation from the shell-ish syntax in YAML
@@ -62,3 +68,18 @@ def load_test_config(path: str) -> TestSuiteConfig:
         return obj
     expanded = walk(data)
     return TestSuiteConfig(**expanded)
+
+def load_test_run_config(path: str) -> TestRunConfig:
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    # Expand env vars only for str leaf nodes
+    def walk(obj):
+        if isinstance(obj, dict):
+            return {k: walk(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [walk(x) for x in obj]
+        if isinstance(obj, str):
+            return _env_expand(obj)
+        return obj
+    expanded = walk(data)
+    return TestRunConfig(**expanded)

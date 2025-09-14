@@ -1,7 +1,86 @@
 # Registry of models. Keys should be stable names you use in tests & harness.
 models:
+  # ---- Local / test doubles -------------------------------------------------
+  echo-local:
+    provider: echo
+    endpoint: mock://echo
+    api_key: ${OPENAI_API_KEY:-dummy}
+    timeout_s: 5
+
   mock-gpt:
     provider: mock
     endpoint: mock://local
     api_key: ${MOCK_API_KEY:-dummy}
     timeout_s: 10
+
+  # ---- OpenAI (legacy Chat Completions endpoint) ----------------------------
+  # These models are accessed via /v1/chat/completions
+  gpt-3.5-turbo:
+    provider: openai
+    endpoint: https://api.openai.com/v1/chat/completions
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  gpt-4:
+    provider: openai
+    endpoint: https://api.openai.com/v1/chat/completions
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  # ---- OpenAI (Responses endpoint) -----------------------------------------
+  # Newer models are served via /v1/responses
+  gpt-4.1:
+    provider: openai
+    endpoint: https://api.openai.com/v1/responses
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  gpt-4.1-mini:
+    provider: openai
+    endpoint: https://api.openai.com/v1/responses
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  gpt-4o:
+    provider: openai
+    endpoint: https://api.openai.com/v1/responses
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  gpt-4o-mini:
+    provider: openai
+    endpoint: https://api.openai.com/v1/responses
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  o3:
+    provider: openai
+    endpoint: https://api.openai.com/v1/responses
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  o4-mini:
+    provider: openai
+    endpoint: https://api.openai.com/v1/responses
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  # ---- GPT-5 family (availability varies by account) -----------------------
+  # If your key doesn't have access yet, these will error.
+  gpt-5:
+    provider: openai
+    endpoint: https://api.openai.com/v1/responses
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  gpt-5-mini:
+    provider: openai
+    endpoint: https://api.openai.com/v1/responses
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  gpt-5-nano:
+    provider: openai
+    endpoint: https://api.openai.com/v1/responses
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30

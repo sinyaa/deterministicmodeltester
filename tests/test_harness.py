@@ -7,8 +7,8 @@ def test_harness_with_mock_model(tmp_path):
     case = TestCase(
         model="mock-gpt",
         prompt="hello",
-        expected_contains="olleh",  # reversed by mock connector
+        expected_contains="hello",  # Mock connector now returns first 10 characters
     )
     ok, text = h.run_case(case)
     assert ok, f"Expected substring not found in: {text}"
-    assert text.startswith("MOCK[mock-gpt]::")
+    assert text == "hello"  # Mock connector now returns text directly

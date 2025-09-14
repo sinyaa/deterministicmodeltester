@@ -5,5 +5,5 @@ def test_mock_connector_roundtrip():
     cfg = load_app_config("config/models.yaml")
     conn = create_connector("mock-gpt", cfg)
     out = conn.generate("abcd")
-    assert out.text.endswith("dcba")
+    assert out.text == "abcd"  # Mock connector now returns first 10 characters
     assert out.model == "mock-gpt"
