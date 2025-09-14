@@ -10,6 +10,13 @@ from .connectors.registry import create_connector
 # Initialize colorama for cross-platform color support
 colorama.init()
 
+def normalize_whitespace(text: str) -> str:
+    """Normalize whitespace in text for comparison."""
+    import re
+    # Replace multiple whitespace characters with single space
+    normalized = re.sub(r'\s+', ' ', text.strip())
+    return normalized
+
 def levenshtein_distance(s1: str, s2: str) -> int:
     """Calculate the Levenshtein distance between two strings."""
     if len(s1) < len(s2):
@@ -96,11 +103,12 @@ class ModelTestRunner:
             
             # Check if test passes
             if test_config.exact_match:
-                expected_stripped = test_config.expected_output.strip()
-                actual_stripped = actual_output.strip()
-                passed = expected_stripped == actual_stripped
+                # Normalize whitespace for comparison
+                expected_normalized = normalize_whitespace(test_config.expected_output)
+                actual_normalized = normalize_whitespace(actual_output)
+                passed = expected_normalized == actual_normalized
                 # Calculate lexicographical distance for exact match tests
-                distance = levenshtein_distance(expected_stripped, actual_stripped)
+                distance = levenshtein_distance(expected_normalized, actual_normalized)
             else:
                 passed = test_config.expected_output.lower() in actual_output.lower()
                 distance = None  # No distance calculation for substring matches

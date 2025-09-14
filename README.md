@@ -7,6 +7,8 @@ It provides a clean project structure, configuration-driven model definitions, p
 - **Pluggable connectors**: Add new connectors by implementing a BaseConnector
   - MockConnector: returns first 10 characters (mock-gpt, mock-claude) or full text (mock-gpt-2)
   - OpenAIConnector: integrates with OpenAI API for real model testing
+  - AnthropicConnector: integrates with Anthropic API for Claude models
+  - EchoConnector: simple echo connector for local testing
 - **Test harness**: Run model evaluations with TestHarness, supporting substring or exact matches
 - **YAML-defined test cases**: Add test cases in `config/tests.yaml` (prompt, expected output)
 - **Simplified test runs**: Automatically run all tests against all configured models
@@ -20,25 +22,136 @@ It provides a clean project structure, configuration-driven model definitions, p
 
 ## Environment Setup
 
-Before running tests with real models, you need to set up your OpenAI API key:
+Before running tests with real models, you need to set up your API keys:
 
 1. **Create a `.env` file** in the project root:
    ```bash
    # .env
    OPENAI_API_KEY=your_actual_openai_api_key_here
+   ANTHROPIC_API_KEY=your_actual_anthropic_api_key_here
    ```
 
-2. **Or set the environment variable** directly:
+2. **Or set the environment variables** directly:
    ```bash
    export OPENAI_API_KEY=your_actual_openai_api_key_here
+   export ANTHROPIC_API_KEY=your_actual_anthropic_api_key_here
    ```
 
 3. **For Windows PowerShell**:
    ```powershell
    $env:OPENAI_API_KEY="your_actual_openai_api_key_here"
+   $env:ANTHROPIC_API_KEY="your_actual_anthropic_api_key_here"
    ```
 
-The `.env` file is already included in `.gitignore` to keep your API key secure.
+**API Key Requirements:**
+- **OpenAI API Key**: Required for all OpenAI models (GPT-3.5, GPT-4, GPT-5, O1, etc.)
+- **Anthropic API Key**: Required for all Claude models (Opus, Sonnet, Haiku)
+- **Mock Models**: No API key required (use dummy values)
+
+The `.env` file is already included in `.gitignore` to keep your API keys secure.
+
+## Supported Models
+
+The AI Model Testbed supports a wide range of AI models from multiple providers:
+
+### 🤖 **OpenAI Models**
+
+**Legacy Chat Completions API (`/v1/chat/completions`):**
+- `gpt-3.5-turbo` - Fast and cost-effective for most tasks
+- `gpt-3.5-turbo-16k` - Extended context version of GPT-3.5 Turbo
+- `gpt-4` - High-quality reasoning and analysis
+
+**Responses API (`/v1/responses`):**
+- `gpt-4.1` - Latest GPT-4 model with improved capabilities
+- `gpt-4.1-mini` - Smaller, faster version of GPT-4.1
+- `gpt-4o` - Multimodal model with vision capabilities
+- `gpt-4o-mini` - Compact version of GPT-4o
+- `gpt-4o-mini-realtime-preview` - Real-time preview of GPT-4o mini
+- `gpt-4o-realtime-preview` - Real-time preview of GPT-4o
+
+**O1 Family:**
+- `o1-mini` - Smaller version of the O1 reasoning model
+- `o1` - Advanced reasoning model (if available)
+- `o3` - Latest reasoning model
+- `o3-mini` - Compact version of O3
+
+**GPT-5 Family (availability varies by account):**
+- `gpt-5` - Next-generation GPT model
+- `gpt-5-mini` - Smaller, faster GPT-5
+- `gpt-5-nano` - Most compact GPT-5 variant
+- `gpt-5-chat` - Chat-optimized GPT-5
+
+**Open Source Models:**
+- `gpt-oss-120b` - 120 billion parameter open source model
+- `gpt-oss-20b` - 20 billion parameter open source model
+
+### 🧠 **Anthropic Claude Models**
+
+**Claude 4 Family:**
+- `claude-opus-4-1-20250805` - Latest Claude Opus 4.1 (most capable)
+- `claude-opus-4-20250514` - Claude Opus 4 (high capability)
+- `claude-sonnet-4-20250514` - Claude Sonnet 4 (balanced performance)
+
+**Claude 3 Family:**
+- `claude-3-7-sonnet-20250219` - Claude Sonnet 3.7 (enhanced reasoning)
+- `claude-3-5-haiku-20241022` - Claude Haiku 3.5 (fast and efficient)
+- `claude-3-haiku-20240307` - Claude Haiku 3 (original fast model)
+
+### 🧪 **Local/Test Models**
+
+**Mock Connectors:**
+- `mock-gpt` - Returns first 10 characters of input (for testing)
+- `mock-gpt-2` - Echoes full input text (for testing)
+- `echo-local` - Simple echo connector for local testing
+
+### 🔧 **Model Configuration**
+
+All models are configured in `config/models.yaml` with the following structure:
+
+```yaml
+models:
+  # OpenAI models
+  gpt-4:
+    provider: openai
+    endpoint: https://api.openai.com/v1/chat/completions
+    api_key: ${OPENAI_API_KEY}
+    timeout_s: 30
+
+  # Anthropic models
+  claude-sonnet-4-20250514:
+    provider: anthropic
+    endpoint: https://api.anthropic.com/v1/messages
+    api_key: ${ANTHROPIC_API_KEY}
+    timeout_s: 30
+
+  # Mock models
+  mock-gpt:
+    provider: mock
+    endpoint: mock://local
+    api_key: ${MOCK_API_KEY:-dummy}
+    timeout_s: 10
+```
+
+### 📊 **Model Performance Insights**
+
+Based on testing results, here are some performance characteristics:
+
+**🏆 Top Performers:**
+- **Claude Haiku 3.5**: Excellent deterministic behavior and multilingual support
+- **Claude Opus 4**: Strong overall performance with good reasoning
+- **GPT-4.1**: Reliable and consistent across most test types
+
+**🎯 Specialized Strengths:**
+- **Deterministic Text**: Claude models excel at exact text reproduction
+- **Multilingual**: Claude Haiku 3.5 shows strong multilingual capabilities
+- **Reasoning**: GPT-4 family provides good analytical capabilities
+- **Speed**: Claude Haiku and GPT-3.5-turbo offer fast response times
+
+**⚠️ Considerations:**
+- Some models may have access restrictions based on your API key
+- GPT-5 family models may not be available to all accounts
+- Realtime preview models may have different behavior patterns
+- Model availability can change over time
 
 ## Quick Start
 
@@ -266,7 +379,8 @@ Model           Score    Pass%    Avg Dist   Tests
 ### 🔧 **Extensible Architecture**
 - **Pluggable Connectors**: Easy to add new model providers
 - **Mock Testing**: Built-in mock connectors for testing without API costs
-- **Real Model Support**: Ready-to-use OpenAI connector for real model testing
+- **Real Model Support**: Ready-to-use connectors for OpenAI and Anthropic APIs
+- **Local Testing**: Echo connector for offline testing and development
 
 ### 📈 **Robust Logging**
 - **Progress Tracking**: Real-time updates during test execution
