@@ -5,7 +5,8 @@ import time
 import colorama
 from colorama import Fore, Back, Style
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from threading import Semaphore
+from threading import Semaphore, Lock
+from datetime import datetime
 from .config.loader import load_app_config, load_test_config, load_test_run_config, TestConfig
 from .connectors.registry import create_connector
 
@@ -73,6 +74,35 @@ class ModelTestRunner:
             'echo': Semaphore(20),  # Local echo can handle more
             'mock': Semaphore(20),  # Mock can handle more
         }
+        
+        # Failed test logging
+        self.log_file_path = self._get_log_file_path()
+        self.log_lock = Lock()  # Thread-safe logging
+    
+    def _get_log_file_path(self) -> str:
+        """Generate log file path with current date."""
+        current_date = datetime.now().strftime("%Y%m%d")
+        return f"test-run-failed-{current_date}.log"
+    
+    def _log_failed_test(self, result: TestResult, total_runs: int) -> None:
+        """Log a failed test to the log file in a thread-safe manner."""
+        if not result.passed:
+            with self.log_lock:
+                try:
+                    with open(self.log_file_path, 'a', encoding='utf-8') as f:
+                        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, {result.model_name}, {result.test_name}, Run ({result.run_number}/{total_runs})\n")
+                        f.write(f"Expected output: {result.expected}\n")
+                        f.write(f"Received output: {result.actual}\n")
+                        if result.distance is not None:
+                            f.write(f"Distance: {result.distance}\n")
+                        else:
+                            f.write("Distance: N/A (substring match)\n")
+                        if result.error:
+                            f.write(f"Error: {result.error}\n")
+                        f.write("\n")
+                except Exception as e:
+                    # Don't let logging errors break the test execution
+                    print(f"Warning: Failed to write to log file: {e}")
     
     def _get_provider_semaphore(self, model_name: str) -> Semaphore:
         """Get the appropriate rate limiter for a model."""
@@ -138,10 +168,10 @@ class ModelTestRunner:
         else:
             return "API_KEY"
     
-    def run_single_test(self, test_name: str, model_name: str, run_number: int = 1) -> TestResult:
+    def run_single_test(self, test_name: str, model_name: str, run_number: int = 1, total_runs: int = 1) -> TestResult:
         """Run a single test against a specific model with rate limiting."""
         if test_name not in self.tests_config.tests:
-            return TestResult(
+            result = TestResult(
                 test_name=test_name,
                 model_name=model_name,
                 passed=False,
@@ -151,12 +181,15 @@ class ModelTestRunner:
                 error=f"Test '{test_name}' not found in configuration",
                 distance=None
             )
+            # Log failed tests
+            self._log_failed_test(result, total_runs)
+            return result
         
         test_config = self.tests_config.tests[test_name]
         
         # Check if model exists in models config
         if model_name not in self.models_config.models:
-            return TestResult(
+            result = TestResult(
                 test_name=test_name,
                 model_name=model_name,
                 passed=False,
@@ -166,6 +199,9 @@ class ModelTestRunner:
                 error=f"Model '{model_name}' not found in models configuration",
                 distance=None
             )
+            # Log failed tests
+            self._log_failed_test(result, total_runs)
+            return result
         
         # Acquire rate limiter for this model's provider
         semaphore = self._get_provider_semaphore(model_name)
@@ -193,7 +229,7 @@ class ModelTestRunner:
                     passed = test_config.expected_output.lower() in actual_output.lower()
                     distance = None  # No distance calculation for substring matches
                 
-                return TestResult(
+                result = TestResult(
                     test_name=test_name,
                     model_name=model_name,
                     passed=passed,
@@ -203,10 +239,13 @@ class ModelTestRunner:
                     error=None,
                     distance=distance
                 )
+                # Log failed tests
+                self._log_failed_test(result, total_runs)
+                return result
                 
             except ValueError as e:
                 # Handle other validation errors
-                return TestResult(
+                result = TestResult(
                     test_name=test_name,
                     model_name=model_name,
                     passed=False,
@@ -216,8 +255,11 @@ class ModelTestRunner:
                     error=str(e),
                     distance=None
                 )
+                # Log failed tests
+                self._log_failed_test(result, total_runs)
+                return result
             except Exception as e:
-                return TestResult(
+                result = TestResult(
                     test_name=test_name,
                     model_name=model_name,
                     passed=False,
@@ -227,6 +269,9 @@ class ModelTestRunner:
                     error=str(e),
                     distance=None
                 )
+                # Log failed tests
+                self._log_failed_test(result, total_runs)
+                return result
     
     def run_test(self, test_name: str) -> List[TestResult]:
         """Run a test against all configured models for that test with parallel model execution."""
@@ -260,7 +305,7 @@ class ModelTestRunner:
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # Submit all model tasks for this test
             future_to_task = {
-                executor.submit(self.run_single_test, task_test_name, task_model_name, task_run_num): (task_test_name, task_model_name, task_run_num)
+                executor.submit(self.run_single_test, task_test_name, task_model_name, task_run_num, total_runs): (task_test_name, task_model_name, task_run_num)
                 for task_test_name, task_model_name, task_run_num in test_tasks
             }
             
@@ -294,6 +339,8 @@ class ModelTestRunner:
                         error=f"Model execution failed: {str(e)}",
                         distance=None
                     )
+                    # Log failed tests
+                    self._log_failed_test(error_result, total_runs)
                     results.append(error_result)
                     completed_runs += 1
                     

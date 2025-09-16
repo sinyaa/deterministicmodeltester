@@ -1,0 +1,60 @@
+2025-09-15 21:19:38, mock-gpt, Short_Text, Run (1/6)
+Expected output: Thank you for your call. Your call is important to us.
+Received output: Return exa
+Distance: 50
+
+2025-09-15 21:19:38, mock-gpt, Short_Text, Run (2/6)
+Expected output: Thank you for your call. Your call is important to us.
+Received output: Return exa
+Distance: 50
+
+2025-09-15 21:19:38, half-echo, Short_Text, Run (1/6)
+Expected output: Thank you for your call. Your call is important to us.
+Received output: Return exactly the following text: Thank you
+Distance: 43
+
+2025-09-15 21:19:38, half-echo, Short_Text, Run (2/6)
+Expected output: Thank you for your call. Your call is important to us.
+Received output: Return exactly the following text: Thank you
+Distance: 43
+
+2025-09-15 21:19:38, reverse-echo, Short_Text, Run (1/6)
+Expected output: Thank you for your call. Your call is important to us.
+Received output: .su ot tnatropmi si llac ruoY .llac ruoy rof uoy knahT :txet gniwollof eht yltcaxe nruteR
+Distance: 69
+
+2025-09-15 21:19:38, reverse-echo, Short_Text, Run (2/6)
+Expected output: Thank you for your call. Your call is important to us.
+Received output: .su ot tnatropmi si llac ruoY .llac ruoy rof uoy knahT :txet gniwollof eht yltcaxe nruteR
+Distance: 69
+
+2025-09-15 21:19:45, mock-gpt, Illogical_Text, Run (1/6)
+Expected output: I fly apples and can lang bee on the ground under 3 feet per mile
+Received output: Return exa
+Distance: 59
+
+2025-09-15 21:19:45, mock-gpt, Illogical_Text, Run (2/6)
+Expected output: I fly apples and can lang bee on the ground under 3 feet per mile
+Received output: Return exa
+Distance: 59
+
+2025-09-15 21:19:45, half-echo, Illogical_Text, Run (1/6)
+Expected output: I fly apples and can lang bee on the ground under 3 feet per mile
+Received output: Return exactly the following quoted text: I fly apple
+Distance: 50
+
+2025-09-15 21:19:45, half-echo, Illogical_Text, Run (2/6)
+Expected output: I fly apples and can lang bee on the ground under 3 feet per mile
+Received output: Return exactly the following quoted text: I fly apple
+Distance: 50
+
+2025-09-15 21:19:45, reverse-echo, Illogical_Text, Run (1/6)
+Expected output: I fly apples and can lang bee on the ground under 3 feet per mile
+Received output: elim rep teef 3 rednu dnuorg eht no eeb gnal nac dna selppa ylf I :txet detouq gniwollof eht yltcaxe nruteR
+Distance: 80
+
+2025-09-15 21:19:45, reverse-echo, Illogical_Text, Run (2/6)
+Expected output: I fly apples and can lang bee on the ground under 3 feet per mile
+Received output: elim rep teef 3 rednu dnuorg eht no eeb gnal nac dna selppa ylf I :txet detouq gniwollof eht yltcaxe nruteR
+Distance: 80
+
