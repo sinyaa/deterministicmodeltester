@@ -1,0 +1,304 @@
+tests:
+  long_text_spanish:
+    # language: Spanish (es)
+    name: "Long text test — Spanish"
+    description: "Instrucción y texto totalmente en español; el modelo debe devolver el texto exactamente."
+    prompt: |-
+      Devuelve exactamente el texto siguiente (sin cambiar ningún carácter):
+      Tenga en cuenta la siguiente información importante.
+      Los servicios proporcionados por esta empresa son estrictamente con fines informativos y educativos. Cualquier contenido, dato o información que proporcionemos no debe interpretarse como asesoramiento de inversión, recomendaciones de negociación ni garantía de resultados financieros. Al continuar utilizando nuestros servicios, usted reconoce y acepta que esta empresa no será responsable de ninguna pérdida, daño o consecuencia derivados de sus actividades de negociación o inversión. Gracias por su comprensión.
+    expected_output: |-
+      Tenga en cuenta la siguiente información importante.
+      Los servicios proporcionados por esta empresa son estrictamente con fines informativos y educativos. Cualquier contenido, dato o información que proporcionemos no debe interpretarse como asesoramiento de inversión, recomendaciones de negociación ni garantía de resultados financieros. Al continuar utilizando nuestros servicios, usted reconoce y acepta que esta empresa no será responsable de ninguna pérdida, daño o consecuencia derivados de sus actividades de negociación o inversión. Gracias por su comprensión.
+    exact_match: true
+
+  long_text_french:
+    # language: French (fr)
+    name: "Long text test — French"
+    description: "Consigne et texte entièrement en français ; sortie identique requise."
+    prompt: |-
+      Renvoyez exactement le texte suivant (ne modifiez aucun caractère) :
+      Veuillez noter les informations importantes suivantes.
+      Les services fournis par cette entreprise sont strictement à des fins d’information et d’éducation. Tout contenu, donnée ou information que nous fournissons ne doit pas être interprété comme un conseil en investissement, une recommandation de trading ou une garantie de résultats financiers. En continuant à utiliser nos services, vous reconnaissez et acceptez que cette entreprise ne pourra être tenue responsable d’aucune perte, dommage ou conséquence résultant de vos activités de trading ou d’investissement. Merci de votre compréhension.
+    expected_output: |-
+      Veuillez noter les informations importantes suivantes.
+      Les services fournis par cette entreprise sont strictement à des fins d’information et d’éducation. Tout contenu, donnée ou information que nous fournissons ne doit pas être interprété comme un conseil en investissement, une recommandation de trading ou une garantie de résultats financiers. En continuant à utiliser nos services, vous reconnaissez et acceptez que cette entreprise ne pourra être tenue responsable d’aucune perte, dommage ou conséquence résultant de vos activités de trading ou d’investissement. Merci de votre compréhension.
+    exact_match: true
+
+  long_text_german:
+    # language: German (de)
+    name: "Long text test — German"
+    description: "Anweisung und Text vollständig auf Deutsch; exakte Ausgabe erforderlich."
+    prompt: |-
+      Gib den folgenden Text exakt zurück (ändere kein einziges Zeichen):
+      Bitte beachten Sie die folgenden wichtigen Informationen.
+      Die von diesem Unternehmen bereitgestellten Dienste dienen ausschließlich Informations- und Ausbildungszwecken. Jegliche von uns bereitgestellten Inhalte, Daten oder Erkenntnisse sind nicht als Anlageberatung, Handelsempfehlung oder Garantie finanzieller Ergebnisse zu verstehen. Durch die weitere Nutzung unserer Dienste erkennen Sie an und stimmen zu, dass dieses Unternehmen nicht für Verluste, Schäden oder Folgen haftbar gemacht werden kann, die sich aus Ihren Handels- oder Investitionstätigkeiten ergeben. Vielen Dank für Ihr Verständnis.
+    expected_output: |-
+      Bitte beachten Sie die folgenden wichtigen Informationen.
+      Die von diesem Unternehmen bereitgestellten Dienste dienen ausschließlich Informations- und Ausbildungszwecken. Jegliche von uns bereitgestellten Inhalte, Daten oder Erkenntnisse sind nicht als Anlageberatung, Handelsempfehlung oder Garantie finanzieller Ergebnisse zu verstehen. Durch die weitere Nutzung unserer Dienste erkennen Sie an und stimmen zu, dass dieses Unternehmen nicht für Verluste, Schäden oder Folgen haftbar gemacht werden kann, die sich aus Ihren Handels- oder Investitionstätigkeiten ergeben. Vielen Dank für Ihr Verständnis.
+    exact_match: true
+
+  long_text_portuguese:
+    # language: Portuguese (pt)
+    name: "Long text test — Portuguese"
+    description: "Instrução e texto totalmente em português; saída idêntica exigida."
+    prompt: |-
+      Retorne exatamente o texto a seguir (não altere nenhum caractere):
+      Observe as seguintes informações importantes.
+      Os serviços fornecidos por esta empresa destinam-se estritamente a fins informativos e educacionais. Qualquer conteúdo, dado ou insight que fornecemos não deve ser interpretado como aconselhamento de investimento, recomendação de negociação ou garantia de resultados financeiros. Ao continuar a utilizar nossos serviços, você reconhece e concorda que esta empresa não será responsável por quaisquer perdas, danos ou consequências resultantes de suas atividades de negociação ou investimento. Agradecemos a sua compreensão.
+    expected_output: |-
+      Observe as seguintes informações importantes.
+      Os serviços fornecidos por esta empresa destinam-se estritamente a fins informativos e educacionais. Qualquer conteúdo, dado ou insight que fornecemos não deve ser interpretado como aconselhamento de investimento, recomendação de negociação ou garantia de resultados financeiros. Ao continuar a utilizar nossos serviços, você reconhece e concorda que esta empresa não será responsável por quaisquer perdas, danos ou consequências resultantes de suas atividades de negociação ou investimento. Agradecemos a sua compreensão.
+    exact_match: true
+
+  long_text_italian:
+    # language: Italian (it)
+    name: "Long text test — Italian"
+    description: "Istruzione e testo interamente in italiano; richiesta corrispondenza esatta."
+    prompt: |-
+      Restituisci esattamente il testo seguente (non modificare alcun carattere):
+      Si prega di notare le seguenti informazioni importanti.
+      I servizi forniti da questa azienda sono esclusivamente a scopo informativo ed educativo. Qualsiasi contenuto, dato o informazione da noi forniti non deve essere interpretato come consulenza sugli investimenti, raccomandazione di trading o garanzia di risultati finanziari. Continuando a utilizzare i nostri servizi, l’utente riconosce e accetta che questa azienda non sarà ritenuta responsabile per eventuali perdite, danni o conseguenze derivanti dalle proprie attività di trading o investimento. Grazie per la comprensione.
+    expected_output: |-
+      Si prega di notare le seguenti informazioni importanti.
+      I servizi forniti da questa azienda sono esclusivamente a scopo informativo ed educativo. Qualsiasi contenuto, dato o informazione da noi forniti non deve essere interpretato come consulenza sugli investimenti, raccomandazione di trading o garanzia di risultati finanziari. Continuando a utilizzare i nostri servizi, l’utente riconosce e accetta che questa azienda non sarà ritenuta responsabile per eventuali perdite, danni o conseguenze derivanti dalle proprie attività di trading o investimento. Grazie per la comprensione.
+    exact_match: true
+
+  long_text_dutch:
+    # language: Dutch (nl)
+    name: "Long text test — Dutch"
+    description: "Instructie en tekst volledig in het Nederlands; exacte uitvoer vereist."
+    prompt: |-
+      Geef exact de volgende tekst terug (verander geen enkel teken):
+      Houd rekening met de volgende belangrijke informatie.
+      De diensten die door dit bedrijf worden geleverd, zijn strikt bedoeld voor informatieve en educatieve doeleinden. Alle inhoud, gegevens of inzichten die wij verstrekken, mogen niet worden geïnterpreteerd als beleggingsadvies, handelsaanbevelingen of een garantie voor financiële resultaten. Door onze diensten te blijven gebruiken, erkent u en gaat u ermee akkoord dat dit bedrijf niet aansprakelijk kan worden gesteld voor eventuele verliezen, schade of gevolgen die voortvloeien uit uw handels- of beleggingsactiviteiten. Bedankt voor uw begrip.
+    expected_output: |-
+      Houd rekening met de volgende belangrijke informatie.
+      De diensten die door dit bedrijf worden geleverd, zijn strikt bedoeld voor informatieve en educatieve doeleinden. Alle inhoud, gegevens of inzichten die wij verstrekken, mogen niet worden geïnterpreteerd als beleggingsadvies, handelsaanbevelingen of een garantie voor financiële resultaten. Door onze diensten te blijven gebruiken, erkent u en gaat u ermee akkoord dat dit bedrijf niet aansprakelijk kan worden gesteld voor eventuele verliezen, schade of gevolgen die voortvloeien uit uw handels- of beleggingsactiviteiten. Bedankt voor uw begrip.
+    exact_match: true
+
+  long_text_chinese_simplified:
+    # language: Chinese (Simplified) zh-Hans
+    name: "Long text test — Chinese (Simplified)"
+    description: "指令与文本均为简体中文；必须逐字返回相同文本。"
+    prompt: |-
+      请原样返回以下文本（不要更改任何字符）：
+      请注意以下重要信息。
+      本公司提供的服务仅用于信息与教育目的。我们提供的任何内容、数据或见解均不应被解释为投资建议、交易推荐或对财务结果的保证。继续使用我们的服务即表示您知悉并同意，本公司不对因您的交易或投资活动而产生的任何损失、损害或后果承担责任。感谢您的理解。
+    expected_output: |-
+      请注意以下重要信息。
+      本公司提供的服务仅用于信息与教育目的。我们提供的任何内容、数据或见解均不应被解释为投资建议、交易推荐或对财务结果的保证。继续使用我们的服务即表示您知悉并同意，本公司不对因您的交易或投资活动而产生的任何损失、损害或后果承担责任。感谢您的理解。
+    exact_match: true
+
+  long_text_chinese_traditional:
+    # language: Chinese (Traditional) zh-Hant
+    name: "Long text test — Chinese (Traditional)"
+    description: "指令與文本皆為繁體中文；必須逐字回傳相同內容。"
+    prompt: |-
+      請原樣返回以下文本（不要更改任何字元）：
+      請注意以下重要資訊。
+      本公司所提供之服務僅供資訊與教育用途。我們所提供的任何內容、資料或見解均不應視為投資建議、交易推薦或對財務結果的保證。繼續使用本服務即表示您已知悉並同意，本公司不對因您的交易或投資行為所造成的任何損失、損害或後果承擔責任。感謝您的理解。
+    expected_output: |-
+      請注意以下重要資訊。
+      本公司所提供之服務僅供資訊與教育用途。我們所提供的任何內容、資料或見解均不應視為投資建議、交易推薦或對財務結果的保證。繼續使用本服務即表示您已知悉並同意，本公司不對因您的交易或投資行為所造成的任何損失、損害或後果承擔責任。感謝您的理解。
+    exact_match: true
+
+  long_text_japanese:
+    # language: Japanese (ja)
+    name: "Long text test — Japanese"
+    description: "指示と本文は日本語。完全一致での返答が必要。"
+    prompt: |-
+      次の文章を一字一句そのまま返してください（変更不可）:
+      次の重要事項にご留意ください。
+      本社が提供するサービスは、情報提供および教育目的のみに限定されています。当社が提供するいかなるコンテンツ、データ、洞察も、投資助言、取引推奨、または財務結果の保証として解釈されるべきではありません。当社のサービスを引き続きご利用になることで、お客様は自己の取引または投資活動に起因するいかなる損失、損害、または結果についても、当社が責任を負わないことに同意したものとみなされます。ご理解のほど、よろしくお願いいたします。
+    expected_output: |-
+      次の重要事項にご留意ください。
+      本社が提供するサービスは、情報提供および教育目的のみに限定されています。当社が提供するいかなるコンテンツ、データ、洞察も、投資助言、取引推奨、または財務結果の保証として解釈されるべきではありません。当社のサービスを引き続きご利用になることで、お客様は自己の取引または投資活動に起因するいかなる損失、損害、または結果についても、当社が責任を負わないことに同意したものとみなされます。ご理解のほど、よろしくお願いいたします。
+    exact_match: true
+
+  long_text_korean:
+    # language: Korean (ko)
+    name: "Long text test — Korean"
+    description: "지시와 본문이 모두 한국어; 문자 하나까지 동일해야 함."
+    prompt: |-
+      아래의 문장을 한 글자도 바꾸지 말고 그대로 반환하세요:
+      다음의 중요한 사항을 유의해 주십시오.
+      본 회사가 제공하는 서비스는 정보 제공 및 교육 목적에 한정됩니다. 당사가 제공하는 모든 콘텐츠, 데이터 또는 인사이트는 투자 조언, 거래 권유 또는 재무 성과에 대한 보증으로 해석되어서는 안 됩니다. 당사 서비스를 계속 이용함으로써 귀하는 귀하의 거래 또는 투자 활동으로 인해 발생하는 어떤 손실, 손해 또는 결과에 대해서도 본 회사가 책임을 지지 않음을 인정하고 동의하는 것입니다. 이해해 주셔서 감사합니다.
+    expected_output: |-
+      다음의 중요한 사항을 유의해 주십시오.
+      본 회사가 제공하는 서비스는 정보 제공 및 교육 목적에 한정됩니다. 당사가 제공하는 모든 콘텐츠, 데이터 또는 인사이트는 투자 조언, 거래 권유 또는 재무 성과에 대한 보증으로 해석되어서는 안 됩니다. 당사 서비스를 계속 이용함으로써 귀하는 귀하의 거래 또는 투자 활동으로 인해 발생하는 어떤 손실, 손해 또는 결과에 대해서도 본 회사가 책임을 지지 않음을 인정하고 동의하는 것입니다. 이해해 주셔서 감사합니다.
+    exact_match: true
+
+  long_text_russian:
+    # language: Russian (ru)
+    name: "Long text test — Russian"
+    description: "Инструкция и текст полностью на русском; требуется точное совпадение."
+    prompt: |-
+      Верните в точности следующий текст (не меняя ни одного символа):
+      Обратите внимание на следующую важную информацию.
+      Услуги, предоставляемые этой компанией, предназначены исключительно для информационных и образовательных целей. Любой предоставляемый нами контент, данные или сведения не следует трактовать как инвестиционные рекомендации, торговые советы или гарантию финансовых результатов. Продолжая пользоваться нашими услугами, вы подтверждаете и соглашаетесь с тем, что компания не несет ответственности за какие-либо убытки, ущерб или последствия, возникающие в результате ваших торговых или инвестиционных действий. Благодарим за понимание.
+    expected_output: |-
+      Обратите внимание на следующую важную информацию.
+      Услуги, предоставляемые этой компанией, предназначены исключительно для информационных и образовательных целей. Любой предоставляемый нами контент, данные или сведения не следует трактовать как инвестиционные рекомендации, торговые советы или гарантию финансовых результатов. Продолжая пользоваться нашими услугами, вы подтверждаете и соглашаетесь с тем, что компания не несет ответственности за какие-либо убытки, ущерб или последствия, возникающие в результате ваших торговых или инвестиционных действий. Благодарим за понимание.
+    exact_match: true
+
+  long_text_arabic:
+    # language: Arabic (ar)
+    name: "Long text test — Arabic"
+    description: "التعليمات والنص باللغة العربية؛ مطلوب تطابق حرفي."
+    prompt: |-
+      يُرجى إرجاع النص التالي كما هو تمامًا (من دون تغيير أي حرف):
+      يُرجى ملاحظة المعلومات المهمة التالية.
+      إن الخدمات التي تقدمها هذه الشركة مخصّصة للأغراض المعلوماتية والتعليمية فقط. ولا ينبغي تفسير أي محتوى أو بيانات أو رؤى نقدّمها على أنها نصيحة استثمارية أو توصية بالتداول أو ضمان لنتائج مالية. وبمواصلة استخدام خدماتنا، فإنك تقرّ وتوافق على أن هذه الشركة غير مسؤولة عن أي خسائر أو أضرار أو عواقب قد تنتج عن أنشطة التداول أو الاستثمار الخاصة بك. شكرًا لتفهمك.
+    expected_output: |-
+      يُرجى ملاحظة المعلومات المهمة التالية.
+      إن الخدمات التي تقدمها هذه الشركة مخصّصة للأغراض المعلوماتية والتعليمية فقط. ولا ينبغي تفسير أي محتوى أو بيانات أو رؤى نقدّمها على أنها نصيحة استثمارية أو توصية بالتداول أو ضمان لنتائج مالية. وبمواصلة استخدام خدماتنا، فإنك تقرّ وتوافق على أن هذه الشركة غير مسؤولة عن أي خسائر أو أضرار أو عواقب قد تنتج عن أنشطة التداول أو الاستثمار الخاصة بك. شكرًا لتفهمك.
+    exact_match: true
+
+  long_text_turkish:
+    # language: Turkish (tr)
+    name: "Long text test — Turkish"
+    description: "Talimat ve metin tamamen Türkçe; birebir aynı çıktı zorunlu."
+    prompt: |-
+      Aşağıdaki metni aynen döndürün (tek bir karakteri bile değiştirmeyin):
+      Lütfen aşağıdaki önemli bilgileri dikkate alın.
+      Bu şirket tarafından sunulan hizmetler yalnızca bilgilendirme ve eğitim amaçlıdır. Sağladığımız herhangi bir içerik, veri veya içgörü; yatırım tavsiyesi, işlem önerisi veya finansal sonuç garantisi olarak yorumlanmamalıdır. Hizmetlerimizi kullanmaya devam ederek, bu şirketin ticaret veya yatırım faaliyetlerinizden doğan herhangi bir kayıp, zarar veya sonuçtan sorumlu tutulamayacağını kabul etmiş olursunuz. Anlayışınız için teşekkür ederiz.
+    expected_output: |-
+      Lütfen aşağıdaki önemli bilgileri dikkate alın.
+      Bu şirket tarafından sunulan hizmetler yalnızca bilgilendirme ve eğitim amaçlıdır. Sağladığımız herhangi bir içerik, veri veya içgörü; yatırım tavsiyesi, işlem önerisi veya finansal sonuç garantisi olarak yorumlanmamalıdır. Hizmetlerimizi kullanmaya devam ederek, bu şirketin ticaret veya yatırım faaliyetlerinizden doğan herhangi bir kayıp, zarar veya sonuçtan sorumlu tutulamayacağını kabul etmiş olursunuz. Anlayışınız için teşekkür ederiz.
+    exact_match: true
+
+  long_text_polish:
+    # language: Polish (pl)
+    name: "Long text test — Polish"
+    description: "Instrukcja i tekst w języku polskim; wymagane dokładne dopasowanie."
+    prompt: |-
+      Zwróć dokładnie następujący tekst (nie zmieniając żadnego znaku):
+      Proszę zwrócić uwagę na następujące важne informacje.
+      Usługi świadczone przez tę firmę służą wyłącznie celom informacyjnym i edukacyjnym. Jakiekolwiek treści, dane lub wnioski, które udostępniamy, nie powinny być interpretowane jako porady inwestycyjne, rekomendacje handlowe ani gwarancja wyników finansowych. Kontynuując korzystanie z naszych usług, potwierdzasz i akceptujesz, że firma не ponosi odpowiedzialności za jakiekolwiek straty, szkody lub konsekwencje wynikające z Twojej działalności handlowej lub inwestycyjnej. Dziękujemy za zrozumienie.
+    expected_output: |-
+      Proszę zwrócić uwagę na następujące важne informacje.
+       Usługi świadczone przez tę firmę służą wyłącznie celom informacyjnym i edukacyjnym. Jakiekolwiek treści, dane lub wnioski, które udostępniamy, nie powinny być interpretowane jako porady inwestycyjne, rekomendacje handlowe ani gwarancja wyników finansowych. Kontynuując korzystanie z naszych usług, potwierdzasz i akceptujesz, że firma не ponosi odpowiedzialności za jakiekolwiek straty, szkody lub konsekwencje wynikające z Twojej działalności handlowej lub inwestycyjnej. Dziękujemy za zrozumienie.
+    exact_match: true
+
+  long_text_ukrainian:
+    # language: Ukrainian (uk)
+    name: "Long text test — Ukrainian"
+    description: "Інструкція та текст українською; потрібна повна відповідність."
+    prompt: |-
+      Поверніть точно такий текст (не змінюючи жодного символу):
+      Зверніть увагу на таку важливу інформацію.
+      Послуги, що надаються цією компанією, призначені виключно для інформаційних та освітніх цілей. Будь-який контент, дані або аналітика, які ми надаємо, не слід розцінювати як інвестиційні поради, рекомендації щодо торгівлі або гарантію фінансових результатів. Продовжуючи користуватися нашими послугами, ви визнаєте та погоджуєтеся, що ця компанія не несе відповідальності за будь-які збитки, шкоду або наслідки, що виникають внаслідок ваших торгових чи інвестиційних дій. Дякуємо за розуміння.
+    expected_output: |-
+      Зверніть увагу на таку важливу інформацію.
+      Послуги, що надаються цією компанією, призначені виключно для інформаційних та освітніх цілей. Будь-який контент, дані або аналітика, які ми надаємо, не слід розцінювати як інвестиційні поради, рекомендації щодо торгівлі або гарантію фінансових результатів. Продовжуючи користуватися нашими послугами, ви визнаєте та погоджуєтеся, що ця компанія не несе відповідальності за будь-які збитки, шкоду або наслідки, що виникають внаслідок ваших торгових чи інвестиційних дій. Дякуємо за розуміння.
+    exact_match: true
+
+  long_text_czech:
+    # language: Czech (cs)
+    name: "Long text test — Czech"
+    description: "Pokyn i text v češtině; vyžadována naprostá shoda."
+    prompt: |-
+      Vraťte přesně následující text (bez změny jediného znaku):
+      Vezměte prosím na vědomí následující důležité informace.
+      Služby poskytované touto společností slouží výhradně k informačním a vzdělávacím účelům. Jakýkoli námi poskytovaný obsah, data či poznatky nesmějí být vykládány jako investiční poradenství, obchodní doporučení ani záruka finančních výsledků. Pokračováním v používání našich služeb berete na vědomí a souhlasíte s tím, že tato společnost nenese odpovědnost za žádné ztráty, škody ani následky vyplývající z vašich obchodních nebo investičních aktivit. Děkujeme za pochopení.
+    expected_output: |-
+      Vezměte prosím na vědomí následující důležité informace.
+      Služby poskytované touto společností slouží výhradně k informačním a vzdělávacím účelům. Jakýkoli námi poskytovaný obsah, data či poznatky nesmějí být vykládány jako investiční poradenství, obchodní doporučení ani záruka finančních výsledků. Pokračováním v používání našich služeb berete na vědomí a souhlasíte s tím, že tato společnost nenese odpovědnost za žádné ztráty, škody ani následky vyplývající z vašich obchodních nebo investičních aktivit. Děkujeme za pochopení.
+    exact_match: true
+
+  Long_text_Swedish:
+    name: "Long text test — Swedish"
+    description: "Instruktion och text helt på svenska; exakt återgivning krävs."
+    prompt: |-
+      Återge exakt följande text (utan att ändra ett enda tecken):
+      Observera följande viktiga information.
+      De tjänster som tillhandahålls av detta företag är strikt avsedda för informations- och utbildningsändamål. Innehåll, data eller insikter som vi tillhandahåller får inte tolkas som investeringsråd, handelsrekommendationer eller en garanti för finansiella resultat. Genom att fortsätta använda våra tjänster bekräftar och samtycker du till att detta företag inte hålls ansvarigt för några förluster, skador eller konsekvenser som uppstår som följd av dina handels- eller investeringsaktiviteter. Tack för din förståelse.
+    expected_output: |-
+      Observera följande viktiga information.
+      De tjänster som tillhandahålls av detta företag är strikt avsedda för informations- och utbildningsändamål. Innehåll, data eller insikter som vi tillhandahåller får inte tolkas som investeringsråd, handelsrekommendationer eller en garanti för finansiella resultat. Genom att fortsätta använda våra tjänster bekräftar och samtycker du till att detta företag inte hålls ansvarigt för några förluster, skador eller konsekvenser som uppstår som följd av dina handels- eller investeringsaktiviteter. Tack för din förståelse.
+    exact_match: true
+
+  Long_text_Danish:
+    name: "Long text test — Danish"
+    description: "Instruktion og tekst på dansk; fuldstændigt match kræves."
+    prompt: |-
+      Returnér præcist følgende tekst (uden at ændre ét eneste tegn):
+      Bemærk venligst følgende vigtige oplysninger.
+      De tjenester, som dette firma leverer, er udelukkende til informations- og uddannelsesformål. Ethvert indhold, data eller indsigt, vi leverer, må ikke fortolkes som investeringsrådgivning, handelsanbefalinger eller en garanti for økonomiske resultater. Ved at fortsætte med at bruge vores tjenester anerkender og accepterer du, at dette firma ikke kan holdes ansvarligt for tab, skader eller konsekvenser, der opstår som følge af dine handels- eller investeringsaktiviteter. Tak for din forståelse.
+    expected_output: |-
+      Bemærk venligst følgende vigtige oplysninger.
+      De tjenester, som dette firma leverer, er udelukkende til informations- og uddannelsesformål. Ethvert indhold, data eller indsigt, vi leverer, må ikke fortolkes som investeringsrådgivning, handelsanbefalinger eller en garanti for økonomiske resultater. Ved at fortsætte med at bruge vores tjenester anerkender og accepterer du, at dette firma ikke kan holdes ansvarligt for tab, skader eller konsekvenser, der opstår som følge af dine handels- eller investeringsaktiviteter. Tak for din forståelse.
+    exact_match: true
+
+  Long_text_Norwegian:
+    name: "Long text test — Norwegian"
+    description: "Instruksjon og tekst på norsk; krever nøyaktig samsvar."
+    prompt: |-
+      Returner nøyaktig følgende tekst (uten å endre ett eneste tegn):
+      Vennligst merk deg følgende viktige informasjon.
+      Tjenestene som tilbys av dette selskapet er strengt ment for informasjons- og opplæringsformål. Alt innhold, data eller innsikt vi gir, skal ikke tolkes som investeringsråd, handelsanbefalinger eller en garanti for økonomiske resultater. Ved å fortsette å bruke våre tjenester erkjenner og godtar du at dette selskapet ikke kan holdes ansvarlig for eventuelle tap, skader eller konsekvenser som oppstår som følge av dine handels- eller investeringsaktiviteter. Takk for forståelsen.
+    expected_output: |-
+      Vennligst merk deg følgende viktige informasjon.
+      Tjenestene som tilbys av dette selskapet er strengt ment for informasjons- og opplæringsformål. Alt innhold, data eller innsikt vi gir, skal ikke tolkes som investeringsråd, handelsanbefalinger eller en garanti for økonomiske resultater. Ved å fortsette å bruke våre tjenester erkjenner og godtar du at dette selskapet ikke kan holdes ansvarlig for eventuelle tap, skader eller konsekvenser som oppstår som følge av dine handels- eller investeringsaktiviteter. Takk for forståelsen.
+    exact_match: true
+
+  Long_text_Finnish:
+    name: "Long text test — Finnish"
+    description: "Ohje ja teksti suomeksi; täydellinen vastaavuus vaaditaan."
+    prompt: |-
+      Palauta täsmälleen seuraava teksti (älä muuta yhtäkään merkkiä):
+      Huomaa seuraavat tärkeät tiedot.
+      Tämän yrityksen tarjoamat palvelut on tarkoitettu yksinomaan tiedotus- ja koulutustarkoituksiin. Mitään tarjoamaamme sisältöä, dataa tai oivalluksia ei tule tulkita sijoitusneuvoiksi, kaupankäyntisuosituksiksi tai takeeksi taloudellisista tuloksista. Jatkamalla palvelujemme käyttöä hyväksyt ja suostut siihen, että tämä yritys ei ole vastuussa mistään menetyksistä, vahingoista tai seurauksista, jotka johtuvat kaupankäynti- tai sijoitustoiminnastasi. Kiitos ymmärryksestäsi.
+    expected_output: |-
+      Huomaa seuraavat tärkeät tiedot.
+      Tämän yrityksen tarjoamat palvelut on tarkoitettu yksinomaan tiedotus- ja koulutustarkoituksiin. Mitään tarjoamaamme sisältöä, dataa tai oivalluksia ei tule tulkita sijoitusneuvoiksi, kaupankäyntisuosituksiksi tai takeeksi taloudellisista tuloksista. Jatkamalla palvelujemme käyttöä hyväksyt ja suostut siihen, että tämä yritys ei ole vastuussa mistään menetyksistä, vahingoista tai seurauksista, jotka johtuvat kaupankäynti- tai sijoitustoiminnastasi. Kiitos ymmärryksestäsi.
+    exact_match: true
+
+  Long_text_Icelandic:
+    name: "Long text test — Icelandic"
+    description: "Leiðbeiningar og texti á íslensku; nákvæm samsvörun nauðsynleg."
+    prompt: |-
+      Skilaðu nákvæmlega eftirfarandi texta (ekki breyta einu staf):
+      Vinsamlegast athugið eftirfarandi mikilvægar upplýsingar.
+      Þjónustan sem þetta fyrirtæki veitir er eingöngu ætluð til upplýsinga og fræðslu. Allt efni, gögn eða innsýn sem við veitum ætti ekki að túlka sem fjárfestingarráð, viðskiptatilmæli eða tryggingu fyrir fjárhagslegum árangri. Með því að halda áfram að nota þjónustu okkar viðurkennir þú og samþykkir að þetta fyrirtæki beri ekki ábyrgð á neinum tjónum, skaða eða afleiðingum sem kunna að hljótast af viðskiptum þínum eða fjárfestingarstarfsemi. Þökkum skilninginn.
+    expected_output: |-
+      Vinsamlegast athugið eftirfarandi mikilvægar upplýsingar.
+      Þjónustan sem þetta fyrirtæki veitir er eingöngu ætluð til upplýsinga og fræðslu. Allt efni, gögn eða innsýn sem við veitum ætti ekki að túlka sem fjárfestingarráð, viðskiptatilmæli eða tryggingu fyrir fjárhagslegum árangri. Með því að halda áfram að nota þjónustu okkar viðurkennir þú og samþykkir að þetta fyrirtæki beri ekki ábyrgð á neinum tjónum, skaða eða afleiðingum sem kunna að hljótast af viðskiptum þínum eða fjárfestingarstarfsemi. Þökkum skilninginn.
+    exact_match: true
+
+  Long_text_Lithuanian:
+    name: "Long text test — Lithuanian"
+    description: "Instrukcija ir tekstas lietuvių kalba; būtinas tikslus atitikimas."
+    prompt: |-
+      Grąžinkite tiksliai šį tekstą (nekeičiant nė vieno simbolio):
+      Atkreipkite dėmesį į šią svarbią informaciją.
+      Šios įmonės teikiamos paslaugos skirtos tik informaciniams ir švietimo tikslams. Bet koks mūsų pateikiamas turinys, duomenys ar įžvalgos neturėtų būti aiškinami kaip investavimo patarimai, prekybos rekomendacijos ar finansinių rezultatų garantija. Tęsdami mūsų paslaugų naudojimą, jūs pripažįstate ir sutinkate, kad ši įmonė nebus atsakinga už jokius nuostolius, žalą ar pasekmes, kylančias dėl jūsų prekybos ar investicijų veiklos. Dėkojame už supratimą.
+    expected_output: |-
+      Atkreipkite dėmesį į šią svarbią informaciją.
+      Šios įmonės teikiamos paslaugos skirtos tik informaciniams ir švietimo tikslams. Bet koks mūsų pateikiamas turinys, duomenys ar įžvalgos neturėtų būti aiškinami kaip investavimo patarimai, prekybos rekomendacijos ar finansinių rezultatų garantija. Tęsdami mūsų paslaugų naudojimą, jūs pripažįstate ir sutinkate, kad ši įmonė nebus atsakinga už jokius nuostolius, žalą ar pasekmes, kylančias dėl jūsų prekybos ar investicijų veiklos. Dėkojame už supratimą.
+    exact_match: true
+
+  Long_text_Latvian:
+    name: "Long text test — Latvian"
+    description: "Instrukcija un teksts latviešu valodā; nepieciešama precīza atbilstība."
+    prompt: |-
+      Atgrieziet tieši šo tekstu (nemainot nevienu rakstzīmi):
+      Lūdzu, ņemiet vērā šādu svarīgu informāciju.
+      Šī uzņēmuma sniegtie pakalpojumi ir paredzēti tikai informatīviem un izglītojošiem mērķiem. Jebkurš mūsu sniegtais saturs, dati vai ieskati nav interpretējami kā ieguldījumu padomi, tirdzniecības ieteikumi vai finanšu rezultātu garantija. Turpinot izmantot mūsu pakalpojumus, jūs atzīstat un piekrītat, ka šis uzņēmums nebūs atbildīgs par jebkādiem zaudējumiem, bojājumiem vai sekām, kas radušās jūsu tirdzniecības vai ieguldījumu darbības rezultātā. Paldies par sapratni.
+    expected_output: |-
+      Lūdzu, ņemiet vērā šādu svarīgu informāciju.
+      Šī uzņēmuma sniegtie pakalpojumi ir paredzēti tikai informatīviem un izglītojošiem mērķiem. Jebkurš mūsu sniegtais saturs, dati vai ieskati nav interpretējami kā ieguldījumu padomi, tirdzniecības ieteikumi vai finanšu rezultātu garantija. Turpinot izmantot mūsu pakalpojumus, jūs atzīstat un piekrītat, ka šis uzņēmums nebūs atbildīgs par jebkādiem zaudējumiem, bojājumiem vai sekām, kas radušās jūsu tirdzniecības vai ieguldījumu darbības rezultātā. Paldies par sapratni.
+    exact_match: true
+
+  Long_text_Estonian:
+    name: "Long text test — Estonian"
+    description: "Juhis ja tekst eesti keeles; vajalik täpne kattuvus."
+    prompt: |-
+      Tagasta täpselt järgmine tekst (ära muuda ühtegi märki):
+      Palun pange tähele järgmisi olulisi andmeid.
+      Selle ettevõtte pakutavad teenused on mõeldud ainult teavitamise ja hariduse eesmärgil. Mis tahes meie poolt esitatud sisu, andmeid või teadmisi ei tohiks tõlgendada kui investeerimisnõuandeid, kauplemissoovitusi ega finantstulemuste garantiid. Teenuseid edasi kasutades tunnistate ja nõustute, et see ettevõte ei vastuta ühegi kaotuse, kahju või tagajärgede eest, mis tulenevad teie kauplemis- või investeerimistegevusest. Täname mõistva suhtumise eest.
+    expected_output: |-
+      Palun pange tähele järgmisi olulisi andmeid.
+      Selle ettevõtte pakutavad teenused on mõeldud ainult teavitamise ja hariduse eesmärgil. Mis tahes meie poolt esitatud sisu, andmeid või teadmisi ei tohiks tõlgendada kui investeerimisnõuandeid, kauplemissoovitusi ega finantstulemuste garantiid. Teenuseid edasi kasutades tunnistate ja nõustute, et see ettevõte ei vastuta ühegi kaotuse, kahju või tagajärgede eest, mis tulenevad teie kauplemis- või investeerimistegevusest. Täname mõistva suhtumise eest.
+    exact_match: true

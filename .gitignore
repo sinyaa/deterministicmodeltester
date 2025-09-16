@@ -1,8 +1,12 @@
 # virtual envs
 .venv/
 env/
+
 # python
 __pycache__/
 *.pyc
+
 # local
 .env
+*.log
+*.html

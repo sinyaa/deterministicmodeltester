@@ -18,6 +18,7 @@ class OpenAIRealtimeWebSocketConnector(BaseConnector):
         self.response_error = None
         self.websocket = None
         self.session_id = None
+        self.first_byte_time = None  # Track when first response data arrives
         
     def _should_retry_empty_response(self, result: GenerateResult, attempt: int) -> bool:
         """Retry on empty responses for OpenAI Realtime API calls."""
@@ -44,18 +45,24 @@ class OpenAIRealtimeWebSocketConnector(BaseConnector):
                 # print(f"🚀 Response create received: {data}")
                 pass
             elif data.get("type") == "response.output_text.delta":
-                # Newer text delta event
+                # Newer text delta event - capture first byte timing
+                if self.first_byte_time is None:
+                    self.first_byte_time = time.time()
                 delta_text = data.get("delta", "")
                 self.response_text += delta_text
                 # print(f"📝 Text delta: '{delta_text}' | Accumulated: '{self.response_text}'")
             elif data.get("type") == "response.content_block.delta":
-                # Older-style content block deltas
+                # Older-style content block deltas - capture first byte timing
+                if self.first_byte_time is None:
+                    self.first_byte_time = time.time()
                 delta = data.get("delta", {})
                 if isinstance(delta, dict) and "text" in delta:
                     self.response_text += delta["text"]
                     # print(f"📝 Content block delta: '{delta['text']}' | Accumulated: '{self.response_text}'")
             elif data.get("type") == "response.audio_transcript.done":
-                # Handle audio responses by extracting transcript
+                # Handle audio responses by extracting transcript - capture first byte timing
+                if self.first_byte_time is None:
+                    self.first_byte_time = time.time()
                 transcript = data.get("transcript", "")
                 if transcript:
                     self.response_text = transcript
@@ -120,6 +127,7 @@ class OpenAIRealtimeWebSocketConnector(BaseConnector):
             self.response_text = ""
             self.response_error = None
             self.session_id = None  # ← ensure fresh for each run
+            self.first_byte_time = None  # ← reset first byte timing
             # print("🔄 State reset complete")
 
             ws_url = f"{self.endpoint}?model={self.model_name}"
@@ -193,22 +201,31 @@ class OpenAIRealtimeWebSocketConnector(BaseConnector):
             ws_thread.join(timeout=3)
             # print(f"🧵 WebSocket thread joined")
 
+            # Calculate first-byte latency
+            first_byte_latency_ms = None
+            if self.first_byte_time is not None:
+                first_byte_latency_ms = (self.first_byte_time - start_time) * 1000
+
             if not self.response_received and not self.response_error:
                 # print(f"❌ Request timeout after {self.timeout_s} seconds")
                 return GenerateResult(text="", model=self.model_name,
-                                      error=f"Request timeout after {self.timeout_s} seconds")
+                                      error=f"Request timeout after {self.timeout_s} seconds",
+                                      first_byte_latency_ms=first_byte_latency_ms)
 
             if self.response_error:
                 # print(f"❌ Response error: {self.response_error}")
-                return GenerateResult(text="", model=self.model_name, error=self.response_error)
+                return GenerateResult(text="", model=self.model_name, error=self.response_error,
+                                      first_byte_latency_ms=first_byte_latency_ms)
 
             # print(f"✅ Success! Final response: '{self.response_text}'")
-            return GenerateResult(text=self.response_text, model=self.model_name)
+            return GenerateResult(text=self.response_text, model=self.model_name,
+                                  first_byte_latency_ms=first_byte_latency_ms)
 
         except Exception as e:
             # print(f"❌ Exception in _generate_single: {str(e)}")
             return GenerateResult(text="", model=self.model_name,
-                                  error=f"WebSocket connection error: {str(e)}")
+                                  error=f"WebSocket connection error: {str(e)}",
+                                  first_byte_latency_ms=None)
         finally:
             # print("🧹 Cleaning up session_id")
             self.session_id = None  # ← avoid bleed into next call

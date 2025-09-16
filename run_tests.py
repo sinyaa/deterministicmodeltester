@@ -67,7 +67,8 @@ def main():
     try:
         # If using --run, don't pass tests_config as it will be loaded from the config file
         if args.run:
-            runner = ModelTestRunner(args.models_config, "config/tests-cases.yaml", test_run_config_path)
+            # When using --run, let the test runner load the tests config from the run config
+            runner = ModelTestRunner(args.models_config, "", test_run_config_path)
         else:
             runner = ModelTestRunner(args.models_config, args.tests_config, test_run_config_path)
         

@@ -11,7 +11,7 @@ It provides a clean project structure, configuration-driven model definitions, p
   - OpenAIRealtimeWebSocketConnector: integrates with OpenAI Realtime API via WebSocket for real-time models
   - EchoConnector: simple echo connector for local testing
 - **Test harness**: Run model evaluations with TestHarness, supporting substring or exact matches
-- **YAML-defined test cases**: Add test cases in `config/tests.yaml` (prompt, expected output)
+- **YAML-defined test cases**: Add test cases in `config/tests/` (prompt, expected output)
 - **Simplified test runs**: Automatically run all tests against all configured models
 - **Multiple test runs**: Configure and run each test N times for reliability testing
 - **Color-coded output**: Visual pass/fail indicators with real-time progress logging
@@ -19,7 +19,47 @@ It provides a clean project structure, configuration-driven model definitions, p
 - **Failed test details**: Shows distance, expected, and received output for each failed test
 - **Model comparison table**: Side-by-side comparison of all models with distance-based scoring and rankings
 - **Robust logging**: Detailed progress indicators, timing information, and error reporting
+- **First-byte latency measurement**: Measures true response latency from request start to first data received
 - **CI-ready**: GitHub Actions workflow included to run pytest on every push/PR
+
+## Latency Measurement
+
+The testbed measures **first-byte latency** for accurate performance comparison:
+
+- **WebSocket Models (RT)**: Measures time from request start to first `response.output_text.delta` received
+- **HTTP Models**: Measures time from request start to complete response received (HTTP responses typically arrive all at once)
+- **P95 Calculation**: Shows 95th percentile latency across all test runs for each model
+- **Color Coding**: Green (< 1000ms), Yellow (1000-2000ms), Red (> 2000ms)
+
+This provides realistic latency comparisons between different model types and helps identify performance characteristics.
+
+## Project Structure
+
+```
+deterministicmodeltester/
+├── config/
+│   ├── models.yaml                    # Model definitions (providers, endpoints, API keys)
+│   ├── evals/                         # Evaluation configurations
+│   │   ├── full-run.yaml             # Complete test suite
+│   │   ├── small-run.yaml            # Quick tests
+│   │   ├── rt-run.yaml               # Real-time models
+│   │   ├── languages.yaml            # Language tests
+│   │   └── mock-run.yaml             # Mock model tests
+│   └── tests/                        # Test case definitions
+│       ├── contactcenter-cases.yaml  # Contact center scenarios
+│       ├── language-cases.yaml       # Multi-language tests
+│       ├── mock-tests-cases.yaml     # Mock model tests
+│       └── single-case.yaml          # Single test case
+├── src/ai_testbed/                   # Core framework
+│   ├── connectors/                   # Model connectors
+│   ├── config/                       # Configuration loading
+│   ├── harness/                      # Test harness
+│   └── test_runner.py                # Main test runner
+├── tests/                            # Unit tests
+├── run_tests.py                      # CLI entry point
+├── load-env.ps1                      # PowerShell environment loader
+└── env.example                       # Environment variables template
+```
 
 ## Environment Setup
 
@@ -205,13 +245,19 @@ python run_tests.py --test deterministic_behavior
 python run_tests.py --test deterministic_behavior --model mock-gpt
 
 # Run with custom config files
-python run_tests.py --models-config config/models.yaml --tests-config config/tests.yaml --test-run-config config/test-run.yaml
+python run_tests.py --models-config config/models.yaml --tests-config config/tests/contactcenter-cases.yaml --test-run-config config/evals/full-run.yaml
 
-# Run with a specific test-run configuration file
-python run_tests.py --run config/test-run.yaml
+# Run with a specific evaluation configuration
+python run_tests.py --run config/evals/full-run.yaml
 
 # Run RT models specifically
-python run_tests.py --run config/rt-run.yaml
+python run_tests.py --run config/evals/rt-run.yaml
+
+# Run language tests
+python run_tests.py --run config/evals/languages.yaml
+
+# Run quick tests
+python run_tests.py --run config/evals/small-run.yaml
 
 # Run all tests against all models with high run counts (bulk testing)
 python run_tests.py --all-models --bulk-runs 100
@@ -226,9 +272,9 @@ The framework uses three separate configuration files for better separation of c
 
 **Benefits of Simplified Configuration:**
 - **Reusable Tests**: Define tests once and run them against multiple models
-- **Automatic Test Execution**: All tests from `tests.yaml` are automatically run against all configured models
-- **Simple Model Management**: Just specify models and run counts in `test-run.yaml`
-- **Better Organization**: Clear separation between test logic and execution configuration
+- **Automatic Test Execution**: All tests from test case files are automatically run against all configured models
+- **Simple Model Management**: Just specify models and run counts in evaluation configurations
+- **Better Organization**: Clear separation between test logic, model definitions, and execution configurations
 
 **Bulk Testing Capabilities:**
 - **All Models Testing**: Run all tests against all configured models with `--all-models`
@@ -252,7 +298,7 @@ models:
     timeout_s: 30
 ```
 
-#### Tests Configuration (`config/tests.yaml`)
+#### Test Cases Configuration (`config/tests/contactcenter-cases.yaml`)
 ```yaml
 # Test definitions - decoupled from models
 tests:
@@ -271,50 +317,46 @@ tests:
     exact_match: false
 ```
 
-#### Test Run Configuration (`config/test-run.yaml`)
+#### Evaluation Configuration (`config/evals/full-run.yaml`)
 ```yaml
-# Simplified test run configuration
-# Automatically runs all tests from tests.yaml against specified models
+# Evaluation configuration
+tests: config/tests/contactcenter-cases.yaml
 runs_per_test: 3  # Default number of runs per test
 
 models:
-  - name: "mock-gpt"
-    runs: 3
-  - name: "mock-gpt-2" 
-    runs: 3
-  - name: "mock-claude"
-    runs: 3
-  - name: "gpt-4.1"
-    runs: 3  # Real model with fewer runs
+  - name: "gpt-3.5-turbo"
+  - name: "gpt-4"
+  - name: "claude-opus-4-1-20250805"
 ```
 
-#### Custom Test Run Configurations
+#### Custom Evaluation Configurations
 
-You can create multiple test-run configuration files for different testing scenarios:
+You can create multiple evaluation configuration files for different testing scenarios:
 
 ```bash
-# Run with a specific test-run configuration
-python run_tests.py --run config/quick-test.yaml
-python run_tests.py --run config/stress-test.yaml
-python run_tests.py --run config/production-test.yaml
+# Run with a specific evaluation configuration
+python run_tests.py --run config/evals/small-run.yaml
+python run_tests.py --run config/evals/languages.yaml
+python run_tests.py --run config/evals/rt-run.yaml
 ```
 
-**Example custom configurations:**
+**Example evaluation configurations:**
 
-**Quick Test (`config/quick-test.yaml`):**
+**Quick Test (`config/evals/small-run.yaml`):**
 ```yaml
+tests: config/tests/single-case.yaml
 runs_per_test: 1
 
 models:
-  - name: "mock-gpt"
-    runs: 1
-  - name: "gpt-4.1"
-    runs: 1
+  - name: "gpt-3.5-turbo"
+  - name: "gpt-4"
+  - name: "claude-opus-4-1-20250805"
+  - name: "gpt-5"
 ```
 
-**RT Models Test (`config/rt-run.yaml`):**
+**RT Models Test (`config/evals/rt-run.yaml`):**
 ```yaml
-tests: config/tests-cases-added.yaml
+tests: config/tests/contactcenter-cases.yaml
 runs_per_test: 1
 
 models:
@@ -322,17 +364,25 @@ models:
   - name: "gpt-4o-realtime-preview"
 ```
 
-**Stress Test (`config/stress-test.yaml`):**
+**Language Tests (`config/evals/languages.yaml`):**
 ```yaml
-runs_per_test: 100
+tests: config/tests/language-cases.yaml
+runs_per_test: 3
 
 models:
-  - name: "mock-gpt"
-    runs: 100
-  - name: "mock-gpt-2"
-    runs: 100
-  - name: "mock-claude"
-    runs: 100
+  - name: "gpt-3.5-turbo"
+  - name: "gpt-5"
+```
+
+**Stress Test (`config/evals/full-run.yaml`):**
+```yaml
+tests: config/tests/contactcenter-cases.yaml
+runs_per_test: 10
+
+models:
+  - name: "gpt-3.5-turbo"
+  - name: "gpt-4"
+  - name: "claude-opus-4-1-20250805"
 ```
 
 ### Output Example
@@ -392,9 +442,10 @@ Model           Score    Pass%    Avg Dist   Tests
 ## Key Features
 
 ### 🚀 **Simplified Configuration**
-- **Automatic Test Execution**: All tests from `tests.yaml` are automatically run against all configured models
-- **Simple Model Management**: Just specify models and run counts in `test-run.yaml`
+- **Automatic Test Execution**: All tests from test case files are automatically run against all configured models
+- **Simple Model Management**: Just specify models and run counts in evaluation configurations
 - **No Complex Setup**: No need to manually define test-model combinations
+- **Organized Structure**: Clear separation between test cases, model definitions, and evaluation configurations
 
 ### 📊 **Comprehensive Testing**
 - **Multiple Test Runs**: Configure and run each test N times for reliability testing
@@ -459,10 +510,10 @@ RT models can be tested using the dedicated configuration:
 
 ```bash
 # Run RT models with their specific test cases
-python run_tests.py --run config/rt-run.yaml
+python run_tests.py --run config/evals/rt-run.yaml
 
 # Run specific RT model
-python run_tests.py --run config/rt-run.yaml --model gpt-4o-mini-realtime-preview
+python run_tests.py --run config/evals/rt-run.yaml --model gpt-4o-mini-realtime-preview
 ```
 
 ### 📊 **RT Models Features**

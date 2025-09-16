@@ -10,6 +10,7 @@ class GenerateResult:
     text: str
     model: str
     error: Optional[str] = None
+    first_byte_latency_ms: Optional[float] = None  # First byte latency in milliseconds
 
 class BaseConnector(ABC):
     """Common interface for all model connectors."""

@@ -50,6 +50,7 @@ class TestResult:
     run_number: int = 1
     error: Optional[str] = None
     distance: Optional[int] = None  # Lexicographical distance for exact match tests
+    latency_ms: Optional[float] = None  # First response latency in milliseconds
 
 class ModelTestRunner:
     """Runs model tests defined in YAML configuration files with parallel execution."""
@@ -62,7 +63,7 @@ class ModelTestRunner:
         self.test_run_config, self.tests_config = load_test_run_config(test_run_config_path)
         
         # If tests_config is None (no tests field in config), fall back to tests_config_path
-        if self.tests_config is None:
+        if self.tests_config is None and tests_config_path:
             self.tests_config = load_test_config(tests_config_path)
         
         self.max_workers = max_workers
@@ -78,11 +79,19 @@ class ModelTestRunner:
         # Failed test logging
         self.log_file_path = self._get_log_file_path()
         self.log_lock = Lock()  # Thread-safe logging
+        
+        # HTML result export
+        self.html_file_path = self._get_html_file_path()
     
     def _get_log_file_path(self) -> str:
         """Generate log file path with current date."""
         current_date = datetime.now().strftime("%Y%m%d")
         return f"test-run-failed-{current_date}.log"
+    
+    def _get_html_file_path(self) -> str:
+        """Generate HTML file path with current date-time."""
+        current_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
+        return f"test-run-result-{current_datetime}.html"
     
     def _log_failed_test(self, result: TestResult, total_runs: int) -> None:
         """Log a failed test to the log file in a thread-safe manner."""
@@ -103,6 +112,339 @@ class ModelTestRunner:
                 except Exception as e:
                     # Don't let logging errors break the test execution
                     print(f"Warning: Failed to write to log file: {e}")
+    
+    def _export_results_to_html(self, results: Dict[str, List[TestResult]]) -> None:
+        """Export test results to HTML file with MODEL COMPARISON TABLE and TEST-MODEL MATRIX."""
+        try:
+            # Calculate summary statistics
+            total_tests = sum(len(test_results) for test_results in results.values())
+            passed_tests = sum(1 for test_results in results.values() for result in test_results if result.passed)
+            failed_tests = total_tests - passed_tests
+            success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+            
+            # Count test types
+            exact_match_tests = sum(1 for test_results in results.values() for result in test_results if result.distance is not None)
+            substring_tests = total_tests - exact_match_tests
+            
+            # Get all unique models and tests
+            all_models = sorted(set(result.model_name for test_results in results.values() for result in test_results))
+            all_tests = sorted(results.keys())
+            
+            # Calculate model statistics
+            model_stats = {}
+            for model in all_models:
+                model_results = [result for test_results in results.values() for result in test_results if result.model_name == model]
+                model_passed = sum(1 for result in model_results if result.passed)
+                model_total = len(model_results)
+                pass_rate = (model_passed / model_total * 100) if model_total > 0 else 0
+                
+                # Calculate average distance for exact match tests
+                exact_match_results = [result for result in model_results if result.distance is not None]
+                avg_distance = sum(result.distance for result in exact_match_results) / len(exact_match_results) if exact_match_results else 0
+                
+                # Calculate score
+                distance_penalty = min(avg_distance / 100, 50)  # Cap penalty at 50%
+                score = max(pass_rate - distance_penalty, 0)  # Ensure non-negative
+                
+                # For exact match tests, if all tests fail, score should be based on distance
+                if model_passed == 0 and avg_distance > 0:
+                    score = max(50 - (avg_distance / 10), 0)
+                
+                model_stats[model] = {
+                    'passed': model_passed,
+                    'total': model_total,
+                    'pass_rate': pass_rate,
+                    'avg_distance': avg_distance,
+                    'score': score
+                }
+            
+            # Sort models by score (descending)
+            sorted_models = sorted(model_stats.items(), key=lambda x: x[1]['score'], reverse=True)
+            
+            # Generate HTML content
+            html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Test Results - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</title>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }}
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }}
+        .header p {{
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }}
+        .summary {{
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }}
+        .summary-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }}
+        .summary-item {{
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }}
+        .summary-item h3 {{
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }}
+        .summary-item .value {{
+            font-size: 2em;
+            font-weight: bold;
+            color: #212529;
+        }}
+        .success {{ color: #28a745; }}
+        .danger {{ color: #dc3545; }}
+        .warning {{ color: #ffc107; }}
+        .info {{ color: #17a2b8; }}
+        .section {{
+            padding: 30px;
+        }}
+        .section h2 {{
+            margin: 0 0 20px 0;
+            color: #495057;
+            font-size: 1.5em;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }}
+        th, td {{
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }}
+        th {{
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }}
+        tr:hover {{
+            background-color: #f8f9fa;
+        }}
+        .score-excellent {{ color: #28a745; font-weight: bold; }}
+        .score-good {{ color: #17a2b8; font-weight: bold; }}
+        .score-poor {{ color: #dc3545; font-weight: bold; }}
+        .footer {{
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 AI Model Test Results</h1>
+            <p>Generated on {datetime.now().strftime('%Y-%m-%d at %H:%M:%S')}</p>
+        </div>
+        
+        <div class="summary">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <h3>Total Tests</h3>
+                    <div class="value info">{total_tests}</div>
+                </div>
+                <div class="summary-item">
+                    <h3>Tests Passed</h3>
+                    <div class="value success">{passed_tests}</div>
+                </div>
+                <div class="summary-item">
+                    <h3>Tests Failed</h3>
+                    <div class="value danger">{failed_tests}</div>
+                </div>
+                <div class="summary-item">
+                    <h3>Success Rate</h3>
+                    <div class="value {'success' if success_rate >= 80 else 'warning' if success_rate >= 50 else 'danger'}">{success_rate:.1f}%</div>
+                </div>
+                <div class="summary-item">
+                    <h3>Models Tested</h3>
+                    <div class="value info">{len(all_models)}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📊 Model Comparison Table</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Score</th>
+                        <th>Pass Rate</th>
+                        <th>Avg Distance</th>
+                        <th>Tests</th>
+                    </tr>
+                </thead>
+                <tbody>"""
+            
+            # Add model comparison rows
+            for i, (model, stats) in enumerate(sorted_models):
+                score_class = "score-excellent" if stats['score'] >= 80 else "score-good" if stats['score'] >= 50 else "score-poor"
+                html_content += f"""
+                    <tr>
+                        <td><strong>{model}</strong></td>
+                        <td class="{score_class}">{stats['score']:.1f}</td>
+                        <td>{stats['pass_rate']:.1f}%</td>
+                        <td>{stats['avg_distance']:.1f}</td>
+                        <td>{stats['passed']}/{stats['total']}</td>
+                    </tr>"""
+            
+            html_content += """
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>📋 Test-Model Matrix</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>"""
+            
+            # Add model headers
+            for model in all_models:
+                html_content += f"<th>{model}</th>"
+            
+            html_content += """
+                    </tr>
+                </thead>
+                <tbody>"""
+            
+            # Add test-model matrix rows
+            for test_name, test_results in results.items():
+                html_content += f"""
+                    <tr>
+                        <td><strong>{test_name}</strong></td>"""
+                
+                for model in all_models:
+                    model_test_results = [r for r in test_results if r.model_name == model]
+                    if model_test_results:
+                        passed = sum(1 for r in model_test_results if r.passed)
+                        total = len(model_test_results)
+                        percentage = (passed / total * 100) if total > 0 else 0
+                        color_class = "success" if percentage == 100 else "warning" if percentage >= 50 else "danger"
+                        html_content += f'<td class="{color_class}">{passed}/{total} ({percentage:.0f}%)</td>'
+                    else:
+                        html_content += '<td>-</td>'
+                
+                html_content += "</tr>"
+            
+            html_content += f"""
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>⚡ Test-Model Latency Table (P95)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>"""
+            
+            # Add model headers for latency table
+            for model in all_models:
+                html_content += f"<th>{model}</th>"
+            
+            html_content += """
+                    </tr>
+                </thead>
+                <tbody>"""
+            
+            # Calculate and add latency data
+            for test_name in all_tests:
+                html_content += f"""
+                    <tr>
+                        <td><strong>{test_name}</strong></td>"""
+                
+                for model_name in all_models:
+                    model_test_results = [r for r in results[test_name] if r.model_name == model_name and r.latency_ms is not None]
+                    if model_test_results:
+                        latencies = [r.latency_ms for r in model_test_results]
+                        latencies.sort()
+                        
+                        # Calculate P95
+                        p95_index = int(len(latencies) * 0.95)
+                        if p95_index >= len(latencies):
+                            p95_index = len(latencies) - 1
+                        p95_latency = latencies[p95_index] if latencies else 0
+                        
+                        # Color coding for latency
+                        if p95_latency < 1000:
+                            color_class = "success"
+                        elif p95_latency < 2000:
+                            color_class = "warning"
+                        else:
+                            color_class = "danger"
+                        
+                        html_content += f'<td class="{color_class}">{p95_latency:.0f}ms</td>'
+                    else:
+                        html_content += '<td>-</td>'
+                
+                html_content += "</tr>"
+            
+            html_content += f"""
+                </tbody>
+            </table>
+            <p><small>Values shown are P95 (95th percentile) latencies. Green: &lt;1000ms, Yellow: 1000-2000ms, Red: &gt;2000ms</small></p>
+        </div>
+        
+        <div class="footer">
+            <p>Generated by AI Model Testbed • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        </div>
+    </div>
+</body>
+</html>"""
+            
+            # Write HTML file
+            with open(self.html_file_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            
+            print(f"\n{Fore.GREEN}📄 Results exported to: {self.html_file_path}{Style.RESET_ALL}")
+            
+        except Exception as e:
+            print(f"{Fore.RED}Warning: Failed to export results to HTML: {e}{Style.RESET_ALL}")
     
     def _get_provider_semaphore(self, model_name: str) -> Semaphore:
         """Get the appropriate rate limiter for a model."""
@@ -179,7 +521,8 @@ class ModelTestRunner:
                 actual="",
                 run_number=run_number,
                 error=f"Test '{test_name}' not found in configuration",
-                distance=None
+                distance=None,
+                latency_ms=0.0
             )
             # Log failed tests
             self._log_failed_test(result, total_runs)
@@ -197,7 +540,8 @@ class ModelTestRunner:
                 actual="",
                 run_number=run_number,
                 error=f"Model '{model_name}' not found in models configuration",
-                distance=None
+                distance=None,
+                latency_ms=0.0
             )
             # Log failed tests
             self._log_failed_test(result, total_runs)
@@ -213,8 +557,16 @@ class ModelTestRunner:
                 # Create connector for the model
                 connector = create_connector(model_name, self.models_config)
                 
-                # Generate response
+                # Generate response and measure latency
                 result = connector.generate(test_config.prompt)
+                end_time = time.time()
+                
+                # Use first-byte latency if available, otherwise fall back to full response time
+                if result.first_byte_latency_ms is not None:
+                    latency_ms = result.first_byte_latency_ms
+                else:
+                    latency_ms = (end_time - start_time) * 1000  # Convert to milliseconds
+                
                 actual_output = result.text
                 
                 # Check if test passes
@@ -237,7 +589,8 @@ class ModelTestRunner:
                     actual=actual_output,
                     run_number=run_number,
                     error=None,
-                    distance=distance
+                    distance=distance,
+                    latency_ms=latency_ms
                 )
                 # Log failed tests
                 self._log_failed_test(result, total_runs)
@@ -245,6 +598,8 @@ class ModelTestRunner:
                 
             except ValueError as e:
                 # Handle other validation errors
+                end_time = time.time()
+                latency_ms = (end_time - start_time) * 1000
                 result = TestResult(
                     test_name=test_name,
                     model_name=model_name,
@@ -253,12 +608,15 @@ class ModelTestRunner:
                     actual="",
                     run_number=run_number,
                     error=str(e),
-                    distance=None
+                    distance=None,
+                    latency_ms=latency_ms
                 )
                 # Log failed tests
                 self._log_failed_test(result, total_runs)
                 return result
             except Exception as e:
+                end_time = time.time()
+                latency_ms = (end_time - start_time) * 1000
                 result = TestResult(
                     test_name=test_name,
                     model_name=model_name,
@@ -267,7 +625,8 @@ class ModelTestRunner:
                     actual="",
                     run_number=run_number,
                     error=str(e),
-                    distance=None
+                    distance=None,
+                    latency_ms=latency_ms
                 )
                 # Log failed tests
                 self._log_failed_test(result, total_runs)
@@ -362,7 +721,7 @@ class ModelTestRunner:
         test_names = list(self.tests_config.tests.keys())
         
         # Calculate total number of test runs
-        total_runs = len(test_names) * self.test_run_config.runs_per_test
+        total_runs = len(test_names) * self.test_run_config.runs_per_test * len(self.test_run_config.models)
         
         print(f"\n{Fore.CYAN}🚀 Starting parallel test execution ..{Style.RESET_ALL}")
         print(f"   {Fore.YELLOW}Tests:{Style.RESET_ALL} {len(test_names)}")
@@ -674,4 +1033,102 @@ class ModelTestRunner:
         
         # Model comparison table with distance-based scoring
         self._print_model_comparison_table(results)
+        
+        # Test-Model latency table with P95 calculations
+        self._print_test_model_latency_table(results)
+        
+        # Export results to HTML
+        self._export_results_to_html(results)
+    
+    def _print_test_model_latency_table(self, results: Dict[str, List[TestResult]]) -> None:
+        """Print TEST-MODEL-LATENCY table with P95 latency calculations."""
+        print("\n" + "=" * 80)
+        print(f"{Fore.CYAN}TEST-MODEL-LATENCY TABLE{Style.RESET_ALL}")
+        print("=" * 80)
+        
+        # Get all unique models and tests
+        all_models = sorted(set(result.model_name for test_results in results.values() for result in test_results))
+        all_tests = sorted(results.keys())
+        
+        if not all_models or not all_tests:
+            print("No latency data available.")
+            return
+        
+        # Calculate latency statistics for each test-model combination
+        latency_data = {}
+        for test_name in all_tests:
+            latency_data[test_name] = {}
+            for model_name in all_models:
+                model_test_results = [r for r in results[test_name] if r.model_name == model_name and r.latency_ms is not None]
+                if model_test_results:
+                    latencies = [r.latency_ms for r in model_test_results]
+                    latencies.sort()
+                    
+                    # Calculate P95 (95th percentile)
+                    p95_index = int(len(latencies) * 0.95)
+                    if p95_index >= len(latencies):
+                        p95_index = len(latencies) - 1
+                    p95_latency = latencies[p95_index] if latencies else 0
+                    
+                    # Calculate other statistics
+                    avg_latency = sum(latencies) / len(latencies) if latencies else 0
+                    min_latency = min(latencies) if latencies else 0
+                    max_latency = max(latencies) if latencies else 0
+                    
+                    latency_data[test_name][model_name] = {
+                        'p95': p95_latency,
+                        'avg': avg_latency,
+                        'min': min_latency,
+                        'max': max_latency,
+                        'count': len(latencies)
+                    }
+                else:
+                    latency_data[test_name][model_name] = {
+                        'p95': 0,
+                        'avg': 0,
+                        'min': 0,
+                        'max': 0,
+                        'count': 0
+                    }
+        
+        # Calculate dynamic column widths
+        test_col_width = max(20, max(len(test) for test in all_tests) + 2)
+        model_col_width = max(12, max(len(model) for model in all_models) + 2)
+        
+        # Print table header
+        header = f"{'Test':<{test_col_width}}"
+        for model in all_models:
+            header += f"{model:<{model_col_width}}"
+        print(header)
+        print("-" * (test_col_width + model_col_width * len(all_models)))
+        
+        # Print latency data for each test
+        for test_name in all_tests:
+            row = f"{test_name:<{test_col_width}}"
+            for model_name in all_models:
+                data = latency_data[test_name][model_name]
+                if data['count'] > 0:
+                    # Format P95 latency with color coding
+                    p95 = data['p95']
+                    if p95 < 1000:
+                        color = Fore.GREEN
+                    elif p95 < 2000:
+                        color = Fore.YELLOW
+                    else:
+                        color = Fore.RED
+                    
+                    # Format latency value with proper spacing
+                    latency_str = f"{color}{p95:.0f}ms{Style.RESET_ALL}"
+                    row += f"{latency_str:<{model_col_width}}"
+                else:
+                    row += f"{'N/A':<{model_col_width}}"
+            print(row)
+        
+        # Print summary statistics
+        print("-" * (test_col_width + model_col_width * len(all_models)))
+        print(f"{Fore.YELLOW}Latency Legend:{Style.RESET_ALL}")
+        print(f"  {Fore.GREEN}Green: < 1000ms{Style.RESET_ALL}")
+        print(f"  {Fore.YELLOW}Yellow: 1000-2000ms{Style.RESET_ALL}")
+        print(f"  {Fore.RED}Red: > 2000ms{Style.RESET_ALL}")
+        print(f"  Values shown are P95 (95th percentile) latencies")
         

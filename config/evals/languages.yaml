@@ -1,9 +1,12 @@
 # Full test run configuration with all supported models
 # Automatically runs all tests from tests-cases.yaml against specified models
-tests: config/tests-cases.yaml
-runs_per_test:  10  # Default number of runs per test (reduced for comprehensive testing)
+tests: config/tests/language-cases.yaml
+runs_per_test:  20  # Default number of runs per test (reduced for comprehensive testing)
 
 models:
       # Real-time preview models
-  - name: "gpt-4o-mini-realtime-preview"
+  - name: "gpt-3.5-turbo"
+  - name: "gpt-5"
+  - name: "gpt-4o"
   - name: "gpt-4o-realtime-preview"
+

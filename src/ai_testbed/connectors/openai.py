@@ -19,6 +19,9 @@ class OpenAIConnector(BaseConnector):
 
     def _generate_single(self, prompt: str) -> GenerateResult:
         """Single generation attempt using the OpenAI API."""
+        import time
+        start_time = time.time()
+        
         try:
             headers = {
                 "Content-Type": "application/json",
@@ -50,6 +53,10 @@ class OpenAIConnector(BaseConnector):
                 timeout=self.timeout_s
             )
             
+            # Calculate first-byte latency (for HTTP, this is the full response time)
+            first_byte_time = time.time()
+            first_byte_latency_ms = (first_byte_time - start_time) * 1000
+            
             if response.status_code == 200:
                 data = response.json()
                 
@@ -70,7 +77,7 @@ class OpenAIConnector(BaseConnector):
                     # Chat completions API format
                     content = data["choices"][0]["message"]["content"]
                 
-                return GenerateResult(text=content, model=self.model_name)
+                return GenerateResult(text=content, model=self.model_name, first_byte_latency_ms=first_byte_latency_ms)
             else:
                 # Include rate limit information in error message
                 error_msg = f"API request failed with status {response.status_code}: {response.text}"
@@ -78,13 +85,17 @@ class OpenAIConnector(BaseConnector):
                     retry_after = response.headers.get('Retry-After')
                     if retry_after:
                         error_msg += f" (retry-after: {retry_after} seconds)"
-                return GenerateResult(text="", model=self.model_name, error=error_msg)
+                return GenerateResult(text="", model=self.model_name, error=error_msg, first_byte_latency_ms=first_byte_latency_ms)
                 
         except requests.exceptions.Timeout:
-            return GenerateResult(text="", model=self.model_name, error="Request timeout")
+            first_byte_latency_ms = (time.time() - start_time) * 1000
+            return GenerateResult(text="", model=self.model_name, error="Request timeout", first_byte_latency_ms=first_byte_latency_ms)
         except requests.exceptions.RequestException as e:
-            return GenerateResult(text="", model=self.model_name, error=f"Request error: {str(e)}")
+            first_byte_latency_ms = (time.time() - start_time) * 1000
+            return GenerateResult(text="", model=self.model_name, error=f"Request error: {str(e)}", first_byte_latency_ms=first_byte_latency_ms)
         except (KeyError, IndexError, json.JSONDecodeError) as e:
-            return GenerateResult(text="", model=self.model_name, error=f"Response parsing error: {str(e)}")
+            first_byte_latency_ms = (time.time() - start_time) * 1000
+            return GenerateResult(text="", model=self.model_name, error=f"Response parsing error: {str(e)}", first_byte_latency_ms=first_byte_latency_ms)
         except Exception as e:
-            return GenerateResult(text="", model=self.model_name, error=f"Unexpected error: {str(e)}")
+            first_byte_latency_ms = (time.time() - start_time) * 1000
+            return GenerateResult(text="", model=self.model_name, error=f"Unexpected error: {str(e)}", first_byte_latency_ms=first_byte_latency_ms)

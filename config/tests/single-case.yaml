@@ -1,0 +1,7 @@
+tests:
+  Short_Text:
+    name: "Deterministic Behavior Test"
+    description: "Tests that the model outputs exactly the expected text without modifications"
+    prompt: "Return exactly the following text: Thank you for your call. Your call is important to us."
+    expected_output: "Thank you for your call. Your call is important to us."
+    exact_match: true
